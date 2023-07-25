@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import useSWR from 'swr';
-
+import { db } from '../../../database';
 import { Box, Button, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField } from '@mui/material';
 import { DriveFileRenameOutline, SaveOutlined, UploadOutlined } from '@mui/icons-material';
 
@@ -42,9 +42,9 @@ interface Props {
 const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
         
-    const { data, error } = useSWR<IEquipment[]>('/api/admin/equipments');    
     
-    const incrementalId =  data?.length 
+    
+  //  const incrementalId =  data?.length 
 
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -163,7 +163,7 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
         <AdminLayout 
             title={'Equipo'} 
-            subTitle={`${ incrementalId }`}
+            subTitle={equipment._id?'Editar':`Equipo nuevo`}
             icon={ <DriveFileRenameOutline /> }
         >
             <form onSubmit={ handleSubmit( onSubmit ) }>
@@ -186,8 +186,8 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                     <TextField
                             label="ID"
                             type='string'
-                            //disabled
-                            value={incrementalId!+1} 
+                            disabled
+
                             //variant="filled"
                             
                             fullWidth 
@@ -425,12 +425,20 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     
     let equipment: IEquipment | null;
 
+   // const { data, error } = useSWR<IEquipment[]>('/api/admin/equipments');  
+
     if ( equip === 'new' ) {
-        // crear un producto
+        // crear un producto\
+        
         const tempEquipment = JSON.parse( JSON.stringify( new Equipment() ) );
         delete tempEquipment._id;
-        tempEquipment.images = ['img1.jpg','img2.jpg'];
+        //tempEquipment.images = ['img1.jpg','img2.jpg'];  
+        //tempEquipment.equip = data!.length
+        
         equipment = tempEquipment;
+        await db.connect();
+        equipment.equip = (await Equipment.count() + 1).toString()
+        await db.disconnect();
 
     } else {
         equipment = await dbEquipments.getEquipmentByEquip(equip.toString());

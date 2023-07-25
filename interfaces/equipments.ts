@@ -23,3 +23,5 @@ export interface IEquipment {
 //export type ISize = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';
 export type ICriticalType = 'CRITICO'|'NO CRITICO';
 export type ILocation = 'QUIROFANO'|'ENDOSCOPIA'|'HEMODINAMIA'|'ENFERMERIA'|'NEONATOLOGIA'|'CONSULTORIOS';
+
+export type ISize = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';

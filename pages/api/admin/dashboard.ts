@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '../../../database'
-import { Order, Product, User, Equipment, Ticket } from '../../../models';
+import { Order, User, Equipment, Ticket } from '../../../models';
 
 type Data = {
     numberOfOrders: number;
@@ -8,8 +8,8 @@ type Data = {
     notPaidOrders: number;
     numberOfClients: number; // role: client
     numberOfProducts: number;
-    productsWithNoInventory: number; // 0
-    lowInventory: number; // productos con 10 o menos
+    //productsWithNoInventory: number; // 0
+    //lowInventory: number; // productos con 10 o menos
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
@@ -27,15 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         paidOrders,
         numberOfClients,
         numberOfProducts,
-        productsWithNoInventory,
-        lowInventory,
+        //productsWithNoInventory,
+        //lowInventory,
     ] = await Promise.all([
         Ticket.count(),
         Order.find({ isPaid: true }).count(),
         User.find({ role: 'client' }).count(),
         Equipment.count(),
-        Product.find({ inStock: 0 }).count(),
-        Product.find({ inStock: { $lte: 10 } }).count(),
+        //Product.find({ inStock: 0 }).count(),
+        //Product.find({ inStock: { $lte: 10 } }).count(),
     ]);
 
     
@@ -46,8 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         paidOrders,
         numberOfClients,
         numberOfProducts,
-        productsWithNoInventory,
-        lowInventory,
+        //productsWithNoInventory,
+        //lowInventory,
         notPaidOrders: numberOfOrders - paidOrders
     })
 

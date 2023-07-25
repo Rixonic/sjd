@@ -49,7 +49,7 @@ const TicketsPage = () => {
     if ( !data && !error ) return (<></>);
     
     const rows = data?.map( ticket => ({   //
-        id    : ticket._id,
+        id    : ticket.ticketId,
         /*
         email : (ticket.user as IUser).email,
         name  : (ticket.user as IUser).name,

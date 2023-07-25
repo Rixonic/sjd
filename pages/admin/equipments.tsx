@@ -51,7 +51,7 @@ const EquipmentsPage = () => {
     const rows = data!.map( equipment => ({
         id: equipment._id,
         equipmentId: equipment.equipmentId,
-        equip: equipment.equip,
+        equip: Number(equipment.equip),
         brand: equipment.brand,
         model: equipment.model,
         serialNumber: equipment.serialNumber,
@@ -79,10 +79,12 @@ const EquipmentsPage = () => {
          <Grid container className='fadeIn'>
             <Grid item xs={12} sx={{ height:650, width: '100%' }}>
                 <DataGrid 
+                    
                     rows={ rows }
                     columns={ columns }
                     pageSize={ 10 }
                     rowsPerPageOptions={ [10] }
+                    initialState={{ sorting:{sortModel:[{field:'equip',sort: 'asc'}]}}}
                 />
 
             </Grid>

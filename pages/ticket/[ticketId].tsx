@@ -7,11 +7,11 @@ import { Box, Button, Chip, Grid, Typography } from '@mui/material';
 import { CartContext } from '../../context/cart/CartContext';
 
 import { ShopLayout } from '../../components/layouts';
-import { ProductSlideshow, SizeSelector } from '../../components/products';
+import { ItemSlideshow } from '../../components/item';
 import { ItemCounter } from '../../components/ui/ItemCounter';
 
 import { dbTickets } from '../../database';
-import { ITicket, ICartProduct, ISize } from '../../interfaces';
+import { ITicket, ICartProduct } from '../../interfaces';
 
 
 
@@ -86,7 +86,7 @@ const TicketPage:NextPage<Props> = ({ ticket }) => {
         </Grid>
 
         <Grid item xs={12} sm={ 7 }>
-          <ProductSlideshow 
+          <ItemSlideshow 
             images={ ticket.images }
           />
         </Grid>

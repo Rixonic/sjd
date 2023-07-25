@@ -2,18 +2,18 @@ import { useState, useContext } from 'react';
 import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';    //Queda
 import { useRouter } from 'next/router';                                                //Queda
 
-import { Box, Button, Chip, Grid, Typography } from '@mui/material';                    //Queda
+//import AspectRatio from '@mui/joy/AspectRatio';
+import { Box, Button, Chip, Grid, Typography, Divider } from '@mui/material';                    //Queda
 
-import { CartContext } from '../../context/cart/CartContext';                           //Queda?
+//import { CartContext } from '../../context/cart/CartContext';                           //Queda?
 
 import { ShopLayout } from '../../components/layouts';                                  //Queda
-import { ProductSlideshow, SizeSelector } from '../../components/products';             //Queda?
+import { ItemSlideshow } from '../../components/item';             //Queda?
 import { ItemCounter } from '../../components/ui/ItemCounter';                          //Queda?
 
 import { dbEquipments } from '../../database';                                            //Se modifica?
-import { IEquipment, ICartProduct, ISize } from '../../interfaces';                       //Se modifica
-
-
+import { IEquipment } from '../../interfaces';                       //Se modifica
+import { AspectRatio } from '@mui/icons-material';
 
 interface Props {
   equipment: IEquipment
@@ -23,44 +23,7 @@ interface Props {
 const EquipmentPage:NextPage<Props> = ({ equipment }) => {
 
   const router = useRouter();
-  /*
-  const { addProductToCart } = useContext( CartContext )
 
-  const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({
-    _id: product._id,
-    image: product.images[0],
-    price: product.price,
-    size: undefined,
-    slug: product.slug,
-    title: product.title,
-    gender: product.gender,
-    quantity: 1,
-  })
-
-  const selectedSize = ( size: ISize ) => {
-    setTempCartProduct( currentProduct => ({
-      ...currentProduct,
-      size
-    }));
-  }
-
-  const onUpdateQuantity = ( quantity: number ) => {
-    setTempCartProduct( currentProduct => ({
-      ...currentProduct,
-      quantity
-    }));
-  }
-
-
-  const onAddProduct = () => {
-
-    if ( !tempCartProduct.size ) { return; }
-
-    addProductToCart(tempCartProduct);
-    router.push('/cart');
-  }
-
-*/
   return (
     <ShopLayout title={ equipment.equipmentId } pageDescription={ equipment.equipmentId }>
     
@@ -69,31 +32,38 @@ const EquipmentPage:NextPage<Props> = ({ equipment }) => {
       <Typography variant='h1' component='h1'>{ 'Equipo' }</Typography>
 
         <Grid item xs={ 12 } sm={ 5 }>
-          <Box display='flex' flexDirection='column'>
+          <Box display='flex' flexDirection='column' >
 
             {/* titulos */}
-            <Typography variant='h1' component='h1'>{ equipment.equip }</Typography>
-            <Typography variant='subtitle1' component='h2'>{ `$${equipment.brand}` }</Typography>
+            <Typography variant='subtitle2' component='h2'>{ `Equipo` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.equipmentId}</Typography>
+            <Divider />
+            <Typography variant='subtitle2' component='h2'>{ `Marca` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.brand }</Typography>
+            <Divider />
+            <Typography variant='subtitle2' component='h2'>{ `Modelo` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.model }</Typography>
+            <Divider />
+            <Typography variant='subtitle2' component='h2'>{ `Serie` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.serialNumber }</Typography>
+            <Divider />
+            <Typography variant='subtitle2' component='h2'>{ `Ubicacion` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.location }</Typography>
 
-            
 
-
-
-
-            {/* Descripción */}
-            <Box sx={{ mt:3 }}>
-              <Typography variant='subtitle2'>Descripción</Typography>
-              <Typography variant='body2'>{ equipment.model }</Typography>
-            </Box>
 
           </Box>
         </Grid>
 
-        <Grid item xs={12} sm={ 7 }>
-          <ProductSlideshow 
-            images={ equipment.images }
-          />
-        </Grid>
+
+            <Grid item xs={12} sm={ 7 }>
+              <Typography variant='subtitle2'>Imagenes</Typography>
+                        <ItemSlideshow 
+                            images={ equipment.images }
+                        />
+
+          </Grid>
+
 
       </Grid>
 

@@ -1,28 +1,29 @@
 import { useState, useContext } from 'react';
-import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';
-import { useRouter } from 'next/router';
+import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';    //Queda
+import { useRouter } from 'next/router';                                                //Queda
 
-import { Box, Button, Chip, Grid, Typography } from '@mui/material';
+import { Box, Button, Chip, Grid, Typography } from '@mui/material';                    //Queda
 
-import { CartContext } from '../../context/cart/CartContext';
+import { CartContext } from '../../context/cart/CartContext';                           //Queda?
 
-import { ShopLayout } from '../../components/layouts';
-import { ProductSlideshow, SizeSelector } from '../../components/products';
-import { ItemCounter } from '../../components/ui/ItemCounter';
+import { ShopLayout } from '../../components/layouts';                                  //Queda
+import { ProductSlideshow, SizeSelector } from '../../components/products';             //Queda?
+import { ItemCounter } from '../../components/ui/ItemCounter';                          //Queda?
 
-import { dbProducts } from '../../database';
-import { IProduct, ICartProduct, ISize } from '../../interfaces';
+import { dbEquipments } from '../../database';                                            //Se modifica?
+import { IEquipment, ICartProduct, ISize } from '../../interfaces';                       //Se modifica
 
 
 
 interface Props {
-  product: IProduct
+  equipment: IEquipment
 }
 
 
-const ProductPage:NextPage<Props> = ({ product }) => {
+const EquipmentPage:NextPage<Props> = ({ equipment }) => {
 
   const router = useRouter();
+  /*
   const { addProductToCart } = useContext( CartContext )
 
   const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({
@@ -59,64 +60,30 @@ const ProductPage:NextPage<Props> = ({ product }) => {
     router.push('/cart');
   }
 
-
+*/
   return (
-    <ShopLayout title={ product.title } pageDescription={ product.description }>
+    <ShopLayout title={ equipment.equipmentId } pageDescription={ equipment.equipmentId }>
     
       <Grid container spacing={3}>
 
-        
+      <Typography variant='h1' component='h1'>{ 'Equipo' }</Typography>
 
         <Grid item xs={ 12 } sm={ 5 }>
           <Box display='flex' flexDirection='column'>
 
             {/* titulos */}
-            <Typography variant='h1' component='h1'>{ product.title }</Typography>
-            <Typography variant='subtitle1' component='h2'>{ `$${product.price}` }</Typography>
+            <Typography variant='h1' component='h1'>{ equipment.equip }</Typography>
+            <Typography variant='subtitle1' component='h2'>{ `$${equipment.brand}` }</Typography>
 
-            {/* Cantidad */}
-            <Box sx={{ my: 2 }}>
-              <Typography variant='subtitle2'>Cantidad</Typography>
-              <ItemCounter 
-                currentValue={ tempCartProduct.quantity }
-                updatedQuantity={ onUpdateQuantity  }
-                maxValue={ product.inStock > 10 ? 10: product.inStock }
-              />
-              <SizeSelector 
-                // selectedSize={ product.sizes[2] } 
-                sizes={ product.sizes }
-                selectedSize={ tempCartProduct.size }
-                onSelectedSize={ selectedSize }
-              />
-            </Box>
+            
 
 
-            {/* Agregar al carrito */}
-            {
-              (product.inStock > 0)
-               ? (
-                  <Button 
-                    color="secondary" 
-                    className='circular-btn'
-                    onClick={ onAddProduct }
-                  >
-                    {
-                      tempCartProduct.size
-                        ? 'Agregar al carrito'
-                        : 'Seleccione una talla'
-                    }
-                  </Button>
-               )
-               : (
-                 <Chip label="No hay disponibles" color="error" variant='outlined' />
-               )
-            }
 
 
             {/* Descripción */}
             <Box sx={{ mt:3 }}>
               <Typography variant='subtitle2'>Descripción</Typography>
-              <Typography variant='body2'>{ product.description }</Typography>
+              <Typography variant='body2'>{ equipment.model }</Typography>
             </Box>
 
           </Box>
@@ -124,7 +91,7 @@ const ProductPage:NextPage<Props> = ({ product }) => {
 
         <Grid item xs={12} sm={ 7 }>
           <ProductSlideshow 
-            images={ product.images }
+            images={ equipment.images }
           />
         </Grid>
 
@@ -165,13 +132,13 @@ const ProductPage:NextPage<Props> = ({ product }) => {
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
   
-  const productSlugs = await dbProducts.getAllProductSlugs();
+  const equipmentEquips = await dbEquipments.getAllEquipmentEquip();
 
   
   return {
-    paths: productSlugs.map( ({ slug }) => ({
+    paths: equipmentEquips.map( ({ equip }) => ({   //equip=>equipmentId
       params: {
-        slug
+        equip                                       //equip=>equipmentId
       }
     })),
     fallback: 'blocking'
@@ -185,10 +152,10 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 //- The page must be pre-rendered (for SEO) and be very fast — getStaticProps generates HTML and JSON files, both of which can be cached by a CDN for performance.
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   
-  const { slug = '' } = params as { slug: string };
-  const product = await dbProducts.getProductBySlug( slug );
+  const { equip = '' } = params as { equip: string }; 
+  const equipment = await dbEquipments.getEquipmentByEquip( equip );
 
-  if ( !product ) {
+  if ( !equipment ) {
     return {
       redirect: {
         destination: '/',
@@ -199,7 +166,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   return {
     props: {
-      product
+      equipment
     },
     revalidate: 60 * 60 * 24
   }
@@ -207,4 +174,4 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 
 
-export default ProductPage
+export default EquipmentPage

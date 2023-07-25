@@ -108,7 +108,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
 
     const onSubmit = async( form: FormData ) => {
         
-        if ( form.images.length < 2 ) return alert('Mínimo 2 imagenes');
+        //if ( form.images.length < 2 ) return alert('Mínimo 2 imagenes');
         setIsSaving(true);
 
         try {
@@ -159,7 +159,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                     <TextField
                             label=""
                             variant='standard'
-                            disabled 
+                            //disabled 
                             fullWidth
                             sx={{ mb: 1 }}
                             { ...register('ticketId', {
@@ -173,7 +173,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                         <TextField
                             label="Summary/Resumen"
                             variant={ticket._id?'outlined':'standard'}
-                            disabled={ticket._id?false:true}
+                            //disabled={ticket._id?false:true}
                             fullWidth 
                             multiline
                             sx={{ mb: 1 }}
@@ -187,7 +187,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                         <TextField
                             label="Detalle"
                             variant={ticket._id?'outlined':'standard'}
-                            disabled={ticket._id?false:true}
+                            //disabled={ticket._id?false:true}
                             fullWidth 
                             sx={{ mb: 1 }}
                             { ...register('detail', {
@@ -200,7 +200,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                         <TextField
                             label="Usuario"
                             variant='standard'
-                            disabled
+                            //disabled
                             fullWidth 
                             value={user?.name}
                             sx={{ mb: 1 }}
@@ -243,7 +243,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                         <TextField
                             label="Assignado a"
                             variant={ticket._id?'outlined':'standard'}
-                            disabled={ticket._id?false:true}
+                            //disabled={ticket._id?false:true}
                             fullWidth 
                             sx={{ mb: 1 }}
                             { ...register('assignedTo', {
@@ -334,7 +334,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     if ( ticketId === 'new' ) {
         // crear un producto
         const tempTicket = JSON.parse( JSON.stringify( new Ticket() ) );
-
+        delete tempTicket._id;
         ticket = tempTicket;
 
     } else {

@@ -2,13 +2,13 @@ import { FC } from 'react';
 import { Slide } from 'react-slideshow-image';
 
 import 'react-slideshow-image/dist/styles.css';
-import styles from './EquipmentSlideshow.module.css';
+import styles from './ItemSlideshow.module.css';
 
 interface Props {
     images: string[]
 }
 
-export const EquipmentSlideshow: FC<Props> = ({ images }) => {
+export const ItemSlideshow: FC<Props> = ({ images }) => {
   return (
     <Slide
         easing="ease"
