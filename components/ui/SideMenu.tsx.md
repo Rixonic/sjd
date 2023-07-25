@@ -82,7 +82,7 @@ export const SideMenu = () => {
 
                 {/* Admin */}
                 {
-                   
+                    user?.role === 'admin' && (
                         <>
                             <Divider />
                             <ListSubheader>Gestion</ListSubheader>
@@ -126,7 +126,7 @@ export const SideMenu = () => {
 
                 
                         </>
-                    
+                    )
                 }
             </List>
         </Box>
