@@ -20,23 +20,21 @@ const ticketSchema = new Schema({
     user: { type: String, default: '' },    
     assignedTo: { type: String, default: '' },  
    
-    equip: {
-        _id     : { type: Schema.Types.ObjectId, ref: 'Equipment' },
-        equip   : { type: String },
-        equipId : { type: String },
-    },
+    equipId: { type: String },
     comment: [{
         _id : { type: String },
         user  : { type: String},
         commentary   : { type: String},
-        //timestamps: true
+        dateTime: { type: String},
     }],
     diagnostic: {
         _id : { type: String },
         user  : { type: String },
         observation   : { type: String },
     },
-
+    isTechnician: { type: Boolean },
+    isSupervisor: { type: Boolean },
+    isService: { type: Boolean },
 },{
     timestamps: true
 });

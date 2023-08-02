@@ -6,12 +6,22 @@ export interface IEquipment {
     model: string;
     brand: string;
     sector: string;
-    locations: ILocation;
+    locations: string;
     headquarter: 'CASTELAR'|'RAMOS MEJIA'
     images: string[];
     ecri: string;
     serialNumber: string;
     criticalType: ICriticalType;
+    associatedEquip:{
+        _id: string;
+        equip: string;
+        equipmentId: string;
+        brand: string;
+        model: string;
+        quantity: number;
+        serialNumber: string;
+        
+    }[];
     
 
     // TODO: agregar createdAt y updatedAt
@@ -25,3 +35,14 @@ export type ICriticalType = 'CRITICO'|'NO CRITICO';
 export type ILocation = 'QUIROFANO'|'ENDOSCOPIA'|'HEMODINAMIA'|'ENFERMERIA'|'NEONATOLOGIA'|'CONSULTORIOS';
 
 export type ISize = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';
+
+export interface IAssociatedEquip {
+    _id: string;
+    equip: string;
+    equipmentId: string;
+    brand: string;
+    model: string;
+    quantity: number;
+    serialNumber: string;
+    
+}

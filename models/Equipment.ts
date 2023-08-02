@@ -8,13 +8,13 @@ const equipmentSchema = new Schema({
     brand: { type: String, required: true, default: '' },
     sector: { type: String, required: true, default: '' },
     equip: { type: String, required: true, default: '' ,unique: true},
-    locations: [{
+    locations: {
         type: String,
         enum: {
             values: ['QUIROFANO','ENDOSCOPIA','HEMODINAMIA','ENFERMERIA','NEONATOLOGIA','CONSULTORIOS'],
             message: '{VALUE} no es un locacion válida'
         }
-    }],
+    },
     headquarter: [{
         type: String,
         enum: {
@@ -32,6 +32,16 @@ const equipmentSchema = new Schema({
             message: '{VALUE} no es un tipo válido'
         },
     },
+    associatedEquip: [{
+        _id: { type: String },
+        equip: { type: String },
+        equipmentId: { type: String },
+        brand: { type: String },
+        model: { type: String },
+        quantity: { type: Number },
+        serialNumber: { type: String },
+    }]
+
 
 },{
     timestamps: true

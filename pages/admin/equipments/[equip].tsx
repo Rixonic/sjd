@@ -2,10 +2,11 @@ import { ChangeEvent, FC, useEffect, useRef, useState } from 'react';
 import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import useSWR from 'swr';
+
 import { db } from '../../../database';
-import { Box, Button, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField } from '@mui/material';
-import { DriveFileRenameOutline, SaveOutlined, UploadOutlined } from '@mui/icons-material';
+import { Box,IconButton, Button, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import { DriveFileRenameOutline, SaveOutlined, UploadOutlined, AddOutlined} from '@mui/icons-material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import { AdminLayout } from '../../../components/layouts'
 import { IEquipment } from '../../../interfaces';
@@ -32,6 +33,15 @@ interface FormData {
     ecri: string;
     serialNumber: string;
     criticalType: string;
+    associatedEquip: {
+        _id: string;
+        equip: string;
+        equipmentId: string;
+        brand: string;
+        model: string;
+        quantity: number;
+        serialNumber: string;
+    }[];
 }
 
 
@@ -41,19 +51,45 @@ interface Props {
 
 const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
-        
-    
-    
-  //  const incrementalId =  data?.length 
+    const { register, handleSubmit, formState:{ errors }, getValues, setValue, watch } = useForm<FormData>({
+        defaultValues: {
+            ...equipment,
+            associatedEquip: equipment.associatedEquip || [], // Inicializar el array en caso de que no exista en el equipo actual
+        },
+    });
 
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null)
     //const [ newTagValue, setNewTagValue ] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    const { register, handleSubmit, formState:{ errors }, getValues, setValue, watch } = useForm<FormData>({
-        defaultValues: equipment
-    })
+//    const { register, handleSubmit, formState:{ errors }, getValues, setValue, watch } = useForm<FormData>({
+//        defaultValues: equipment
+//    })
+
+    const onAssociatedEquipChange = (index: number, field: string, value: string | number) => {
+        const updatedAssociatedEquip = [...getValues('associatedEquip')];
+        updatedAssociatedEquip[index][field] = value;
+        setValue('associatedEquip', updatedAssociatedEquip, { shouldValidate: true });
+    };
+
+    const onDeleteAssociatedEquip = (index: number) => {
+        const updatedAssociatedEquip = [...getValues('associatedEquip')];
+        updatedAssociatedEquip.splice(index, 1);
+        setValue('associatedEquip', updatedAssociatedEquip, { shouldValidate: true });
+    };
+
+    const onAddAssociatedEquip = () => {
+        setValue('associatedEquip', [...getValues('associatedEquip'), {
+            _id: '',
+            equip: '',
+            equipmentId: '',
+            brand: '',
+            model: '',
+            quantity: 0,
+            serialNumber: '',
+        }], { shouldValidate: true });
+    };
 
 /*
     useEffect(() => {
@@ -161,6 +197,8 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
     return (
 
+
+        
         <AdminLayout 
             title={'Equipo'} 
             subTitle={equipment._id?'Editar':`Equipo nuevo`}
@@ -405,6 +443,71 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                                 }
                             </Grid>
 
+                            <Grid item xs={12} sm={12}>
+                            <Box display="flex" alignItems="center">
+                                <Typography variant="h6">Equipos Asociados</Typography>
+                                <Button
+                                    color="secondary"
+                                    onClick={onAddAssociatedEquip}
+                                    startIcon={<AddOutlined />}
+                                    sx={{ marginLeft: 'auto' }}
+                                >
+                                    Agregar Equipo Asociado
+                                </Button>
+                            </Box>
+                            {getValues('associatedEquip').map((associatedEquip, index) => (
+                                <Box key={index} sx={{ mt: 2 }}>
+                                    <Grid container spacing={2} alignItems="center">
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField
+                                                label="ID"
+                                                fullWidth
+                                                {...register(`associatedEquip.${index}._id`, {
+                                                    required: 'Este campo es requerido',
+                                                })}
+                                                value={associatedEquip._id}
+                                                onChange={(e) => onAssociatedEquipChange(index, '_id', e.target.value)}
+                                                error={!!errors?.associatedEquip?.[index]?._id}
+                                                helperText={errors?.associatedEquip?.[index]?._id?.message}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField
+                                                label="Equipo"
+                                                fullWidth
+                                                {...register(`associatedEquip.${index}.equipmentId`, {
+                                                    required: 'Este campo es requerido',
+                                                    minLength: { value: 1, message: 'Mínimo 2 caracteres' },
+                                                })}
+                                                value={associatedEquip.equipmentId}
+                                                onChange={(e) => onAssociatedEquipChange(index, 'equipmentId', e.target.value)}
+                                                error={!!errors?.associatedEquip?.[index]?.equipmentId}
+                                                helperText={errors?.associatedEquip?.[index]?.equipmentId?.message}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField
+                                                label="Marca"
+                                                fullWidth
+                                                {...register(`associatedEquip.${index}.brand`, {
+                                                    required: 'Este campo es requerido',
+                                                })}
+                                                value={associatedEquip.brand}
+                                                onChange={(e) => onAssociatedEquipChange(index, 'brand', e.target.value)}
+                                                error={!!errors?.associatedEquip?.[index]?.brand}
+                                                helperText={errors?.associatedEquip?.[index]?.brand?.message}
+                                            />
+                                        </Grid>
+                                        {/* Resto de los campos ... */}
+                                        <Grid item xs={12} sm={3}>
+                                            <IconButton onClick={() => onDeleteAssociatedEquip(index)} color="error">
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            ))}
+                        </Grid>
                         </Box>
 
                     </Grid>
