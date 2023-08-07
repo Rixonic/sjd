@@ -1,5 +1,4 @@
 import React, { HTMLAttributes, HTMLProps , useState, useEffect} from 'react'
-import { Box, Typography} from '@mui/material'
 //import ReactDOM from 'react-dom/client'
 import { AdminLayout } from '../../components/layouts'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -135,13 +134,13 @@ const EquipmentsPage = () =>  {
     const fetchData = async () => {
       try {
         const response = await axios.get('/api/admin/equipments');
-        setData(response.data); 
+        setData(response.data); // Update the state with fetched data
       } catch (err) {
-        setError(err); 
+        setError(err); // Set error state if request fails
       }
     };
 
-    fetchData();
+    fetchData(); // Fetch data when the component mounts
   }, []);
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
@@ -168,15 +167,6 @@ const EquipmentsPage = () =>  {
         subTitle={'Listado de equipamiento'}
         icon={ <CategoryOutlined /> }
     >
-              <Box display='flex' justifyContent='end' sx={{ mb: 2 }}>
-            <Button
-                startIcon={ <AddOutlined /> }
-                color="secondary"
-                href="/admin/equipments/new"
-            >
-                Agregar equipo
-            </Button>
-        </Box>
     <div className="p-2">
       <div className="h-2" />
       <table>
@@ -251,11 +241,11 @@ const EquipmentsPage = () =>  {
           <LastPageIcon />
         </IconButton>
         <span className="flex items-center gap-1">
-          <div>Page:          <strong>
+          <div>Page</div>
+          <strong>
             {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}
-          </strong></div>
-
+          </strong>
         </span>
       </div>
 

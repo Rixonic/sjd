@@ -12,16 +12,7 @@ export interface IEquipment {
     ecri: string;
     serialNumber: string;
     criticalType: ICriticalType;
-    associatedEquip:{
-        _id: string;
-        equip: string;
-        equipmentId: string;
-        brand: string;
-        model: string;
-        quantity: number;
-        serialNumber: string;
-        
-    }[];
+    associatedEquip?:IEquipment[];
     
 
     // TODO: agregar createdAt y updatedAt
