@@ -30,7 +30,18 @@ const columns:GridColDef[] = [
         renderCell: ({ row }: GridValueGetterParams) => {
             return (
                 <a href={ `/admin/tickets/${ row.id }` } target="_blank" rel="noreferrer" >
-                    Ver orden
+                    Editar ticket
+                </a>
+            )
+        }
+    },
+    {
+        field: 'edit',
+        headerName: 'Ver Ticket',
+        renderCell: ({ row }: GridValueGetterParams) => {
+            return (
+                <a href={ `/ticket/${ row.id }` } target="_blank" rel="noreferrer" >
+                    Ver ticket
                 </a>
             )
         }

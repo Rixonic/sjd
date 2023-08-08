@@ -100,6 +100,11 @@ const EquipmentPage:NextPage<Props> = ({ equipment }) => {
 
 // getStaticPaths....
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
+
+
+
+
+
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
   
   const equipmentEquips = await dbEquipments.getAllEquipmentEquip();

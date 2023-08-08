@@ -9,10 +9,14 @@ export interface ITicket {
     detail      : string;           //Detalle del ticket
     user        : string;           //Quien creo el ticket
     assignedTo  : string;           //Usuario asignado
-    equip       : IEquipAssociated; //Equipo asociado
+    associatedEquipId: string; //Equipo asociado
     comment     : IComment[];       //Aca se cargan todos los comentarios, varios
     diagnostic  : IDiagonstic;      //Aca se cargan todos los comentarios
     createdAt?  : string;           //Fecha de creacion del ticket
+    isTechnician: boolean;
+    isSupervisor: boolean;
+    isService   : boolean;
+    
 }
 
 export interface IDiagonstic{
@@ -28,11 +32,6 @@ export interface IComment{
     createAt? : string;
 }
 
-export interface IEquipAssociated{
-    _id         : string;
-    equip       : string;
-    equipId     : string;
-}
 
 
 /*

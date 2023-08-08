@@ -1,6 +1,8 @@
+import NextLink from 'next/link';
 import React, { HTMLAttributes, HTMLProps , useState, useEffect} from 'react'
-import { Box, Typography} from '@mui/material'
-//import ReactDOM from 'react-dom/client'
+import { Box, Typography, Stack} from '@mui/material'
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { AdminLayout } from '../../components/layouts'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Button from '@mui/material/Button';
@@ -14,7 +16,7 @@ import TextField from '@mui/material/TextField';
 
 import { IEquipment  } from '../../interfaces';
 import axios from 'axios';
-//import '../../styles/index.css'
+
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
 import {
@@ -37,7 +39,7 @@ const EquipmentsPage = () =>  {
   const columns = React.useMemo<ColumnDef<IEquipment>[]>(
     () => [
       {
-        header: 'Name',
+        header: 'Identificacion',
         footer: props => props.column.id,
         columns: [
           {
@@ -55,15 +57,8 @@ const EquipmentsPage = () =>  {
               </>
             ),
             cell: ({ row, getValue }) => (
-              <div
-                style={{
-                  // Since rows are flattened by default,
-                  // we can use the row.depth property
-                  // and paddingLeft to visually indicate the depth
-                  // of the row
-                  paddingLeft: `${row.depth * 2}rem`,
-                }}
-              >
+              <Stack direction="row" spacing={2}>
+
                 <>
                   {row.getCanExpand() ? (
                     <IconButton
@@ -79,7 +74,7 @@ const EquipmentsPage = () =>  {
                   )}
                   {getValue()}
                 </>
-              </div>
+              </Stack>
             ),
             footer: props => props.column.id,
           },
@@ -88,12 +83,13 @@ const EquipmentsPage = () =>  {
             id: 'ecri',
             cell: info => info.getValue(),
             header: () => <span>ECRI</span>,
+            size: 50,
             footer: props => props.column.id,
           },
         ],
       },
       {
-        header: 'Info',
+        header: 'Informacion',
         footer: props => props.column.id,
         columns: [
           {
@@ -102,20 +98,39 @@ const EquipmentsPage = () =>  {
             footer: props => props.column.id,
           },
           {
-            header: 'More Info',
-            columns: [
-              {
-                accessorKey: 'sector',
-                header: () => <span>Visits</span>,
-                footer: props => props.column.id,
-              },
-              {
-                accessorKey: 'location',
-                header: 'Status',
-                footer: props => props.column.id,
-              },
-
-            ],
+            accessorKey: 'brand',
+            header: 'Marca',
+            footer: props => props.column.id,
+          },
+          {
+            accessorKey: 'model',
+            header: 'Modelo',
+            footer: props => props.column.id,
+          },
+          {
+            accessorKey: 'sector',
+            header: () => <span>Sector</span>,
+            footer: props => props.column.id,
+          },
+          {
+            accessorKey: 'location',
+            header: 'Ubicacion',
+            footer: props => props.column.id,
+          },
+        ],
+      },
+      {
+        header: 'Acciones',
+        columns: [
+          {
+            id: '_id',
+            cell: ({ row }) => (
+              <Stack direction="row">
+                <IconButton href={`/admin/equipments/${row.original.equip}`}><EditIcon/></IconButton>
+                <IconButton href={`/equipment/${row.original.equip}`}><VisibilityIcon/></IconButton>
+              </Stack>
+            ),
+            footer: props => props.column.id,
           },
         ],
       },
@@ -151,7 +166,16 @@ const EquipmentsPage = () =>  {
     columns,
     state: {
       expanded,
+      
     },
+    paginateExpandedRows: false,
+    initialState: {
+      pagination: {
+          pageSize: 10,
+      },
+
+
+  },
     onExpandedChange: setExpanded,
     getSubRows: row => row.associatedEquip,
     getCoreRowModel: getCoreRowModel(),
@@ -168,15 +192,7 @@ const EquipmentsPage = () =>  {
         subTitle={'Listado de equipamiento'}
         icon={ <CategoryOutlined /> }
     >
-              <Box display='flex' justifyContent='end' sx={{ mb: 2 }}>
-            <Button
-                startIcon={ <AddOutlined /> }
-                color="secondary"
-                href="/admin/equipments/new"
-            >
-                Agregar equipo
-            </Button>
-        </Box>
+
     <div className="p-2">
       <div className="h-2" />
       <table>
@@ -187,17 +203,17 @@ const EquipmentsPage = () =>  {
                 return (
                   <th key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder ? null : (
-                      <div>
+                      <Box>
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
                         {header.column.getCanFilter() ? (
-                          <div>
+                          <Box>
                             <Filter column={header.column} table={table} />
-                          </div>
+                          </Box>
                         ) : null}
-                      </div>
+                      </Box>
                     )}
                   </th>
                 )
@@ -224,8 +240,14 @@ const EquipmentsPage = () =>  {
           })}
         </tbody>
       </table>
-      <div className="h-2" />
-      <div className="flex items-center gap-2">
+      
+      <Stack
+  direction="row"
+  justifyContent="space-between"
+  alignItems="center"
+  spacing={2}
+>
+      <Stack direction="row" >
         <IconButton
           onClick={() => {table.setPageIndex(0);}}
           disabled={!table.getCanPreviousPage()}
@@ -250,15 +272,24 @@ const EquipmentsPage = () =>  {
         >
           <LastPageIcon />
         </IconButton>
+        </Stack>
         <span className="flex items-center gap-1">
-          <div>Page:          <strong>
+          <div>Page:<strong>
             {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}
           </strong></div>
-
         </span>
-      </div>
+        <Button
+        startIcon={ <AddOutlined /> }
+        color="secondary"
+        href="/admin/equipments/new"
+      >
+        Agregar equipo
+      </Button>
+        
 
+        
+        </Stack>
     </div>
         
     </AdminLayout>
@@ -312,7 +343,7 @@ function Filter({
       type="text"
       value={(columnFilterValue ?? '') as string}
       onChange={e => column.setFilterValue(e.target.value)}
-      placeholder={`Search...`}
+      placeholder={`Buscar`}
       size="small"
     />
   )
