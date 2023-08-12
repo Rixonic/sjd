@@ -13,7 +13,7 @@ export default NextAuth({
     Credentials({
       name: 'Custom Login',
       credentials: {
-        email: { label: 'Correo:', type: 'email', placeholder: 'correo@google.com'  },
+        email: { label: 'Usuario:', type: 'text', placeholder: 'nombre.apellido'  },
         password: { label: 'Contraseña:', type: 'password', placeholder: 'Contraseña'  },
       },
       async authorize(credentials) {

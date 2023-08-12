@@ -73,13 +73,12 @@ const LoginPage = () => {
 
                         <Grid item xs={12}>
                             <TextField
-                                type="email"
-                                label="Correo"
+                                type="text"
+                                label="Usuario"
                                 variant="filled"
                                 fullWidth 
                                 { ...register('email', {
-                                    required: 'Este campo es requerido',
-                                    validate: validations.isEmail
+                                    required: 'Este campo es requerido'
                                     
                                 })}
                                 error={ !!errors.email }
@@ -114,31 +113,6 @@ const LoginPage = () => {
                         </Grid>
 
 
-                            
-                        <Grid item xs={12} display='flex' flexDirection='column' justifyContent='end'>
-                            <Divider sx={{ width: '100%', mb: 2 }} />
-                            {
-                                Object.values( providers ).map(( provider: any ) => {
-                                    
-                                    if ( provider.id === 'credentials' ) return (<div key="credentials"></div>);
-
-                                    return (
-                                        <Button
-                                            key={ provider.id }
-                                            variant="outlined"
-                                            fullWidth
-                                            color="primary"
-                                            sx={{ mb: 1 }}
-                                            onClick={ () => signIn( provider.id ) }
-                                        >
-                                            { provider.name }
-                                        </Button>
-                                    )
-
-                                })
-                            }
-
-                        </Grid>
 
                     </Grid>
                 </Box>

@@ -9,7 +9,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { SWRConfig } from 'swr';
 
 import { lightTheme } from '../themes';
-import { AuthProvider, CartProvider, UiProvider } from '../context';
+import { AuthProvider, UiProvider } from '../context';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -24,7 +24,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         >
           <AuthProvider>
 
-              <UiProvider>
+              <UiProvider >
                 <ThemeProvider theme={ lightTheme}>
                     <CssBaseline />
                     <Component {...pageProps} />

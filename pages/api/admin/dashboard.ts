@@ -1,13 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '../../../database'
-import { Order, User, Equipment, Ticket } from '../../../models';
+import { User, Equipment, Ticket } from '../../../models';
 
 type Data = {
     numberOfOrders: number;
     paidOrders: number; // isPad true
     notPaidOrders: number;
     numberOfClients: number; // role: client
-    numberOfProducts: number;
+    //numberOfProducts: number;
     //productsWithNoInventory: number; // 0
     //lowInventory: number; // productos con 10 o menos
 }
@@ -26,12 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         numberOfOrders,
         paidOrders,
         numberOfClients,
-        numberOfProducts,
+        //numberOfProducts,
         //productsWithNoInventory,
         //lowInventory,
     ] = await Promise.all([
         Ticket.count(),
-        Order.find({ isPaid: true }).count(),
+        //Order.find({ isPaid: true }).count(),
         User.find({ role: 'client' }).count(),
         Equipment.count(),
         //Product.find({ inStock: 0 }).count(),
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         numberOfOrders,
         paidOrders,
         numberOfClients,
-        numberOfProducts,
+        //numberOfProducts,
         //productsWithNoInventory,
         //lowInventory,
         notPaidOrders: numberOfOrders - paidOrders

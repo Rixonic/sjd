@@ -33,17 +33,32 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Data>)
 }
 
 const getEquipments = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
-    
+    const { sector, location } = req.query;
+
     await db.connect();
 
-    const equipments = await Equipment.find()
-        .sort({ equip: 'asc' })
+    let query = Equipment.find();
+    if (sector) {
+        query = query.where('sector', sector);
+    }
+    if (location) {
+        query = query.where('location', location);
+    }
+
+    const equipments = await query
+
         .lean();
+
+        const sortedEquipments = equipments.sort((a, b) => {
+            const equipA = parseInt(a.equip, 10);
+            const equipB = parseInt(b.equip, 10);
+            return equipA - equipB;
+        });
 
     await db.disconnect();
 
     // TODO:
-    const updatedEquipments = equipments.map( equipment => {
+    const updatedEquipments = sortedEquipments.map( equipment => {
         equipment.images = equipment.images.map( image => {
             return image.includes('http') ? image : `${ process.env.HOST_NAME}equipments/${ image }`
         });

@@ -1,8 +1,7 @@
 import { useContext } from 'react';
 import NextLink from 'next/link';
 
-
-import { AppBar, Box, Button, Link, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, Stack, Toolbar, Typography, Divider, Link } from '@mui/material';
 
 
 import { UiContext } from '../../context';
@@ -15,12 +14,10 @@ export const AdminNavbar = () => {
     return (
         <AppBar>
             <Toolbar>
-                <NextLink href='/' passHref>
-                    <Link display='flex' alignItems='center'>
+                    <Link display='flex' alignItems="baseline" href='/'>
                         <Typography variant='h6'>Ingenieria |</Typography>
                         <Typography sx={{ ml: 0.5 }}>CHSJDD</Typography>
                     </Link>  
-                </NextLink>
 
                 <Box flex={ 1 } />
 

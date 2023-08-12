@@ -13,6 +13,7 @@ type Data =
         email: string;
         name: string;
         role: string;
+        sector: string;
     }
 }
 
@@ -53,14 +54,15 @@ const checkJWT = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
         return res.status(400).json({ message: 'No existe usuario con ese id' })
     }
 
-    const { _id, email, role, name } = user;
+    const { _id, email, role, name, sector } = user;
 
     return res.status(200).json({
         token: jwt.signToken( _id, email ),
         user: {
             email, 
             role, 
-            name
+            name,
+            sector
         }
     })
 

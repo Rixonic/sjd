@@ -1,12 +1,11 @@
 export interface IEquipment {
-    location: any;
     _id: string;
     equip: string;
     equipmentId: string;
     model: string;
     brand: string;
     sector: string;
-    locations: string;
+    location: string;
     headquarter: 'CASTELAR'|'RAMOS MEJIA'
     images: string[];
     ecri: string;

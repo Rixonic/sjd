@@ -13,6 +13,7 @@ type Data =
         email: string;
         name: string;
         role: string;
+        sector: string;
     }
 }
 
@@ -45,14 +46,14 @@ const loginUser = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
         return res.status(400).json({ message: 'Correo o contraseña no válidos - Password' })
     }
 
-    const { role, name, _id } = user;
+    const { sector, role, name, _id } = user;
 
     const token = jwt.signToken( _id, email );
 
     return res.status(200).json({
         token, //jwt
         user: {
-            email, role, name
+            email, role, name, sector,
         }
     })
 

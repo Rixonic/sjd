@@ -4,14 +4,12 @@ import { useRouter } from 'next/router';
 
 import { Box, Button, Chip, Grid, Typography } from '@mui/material';
 
-import { CartContext } from '../../context/cart/CartContext';
-
 import { ShopLayout } from '../../components/layouts';
 import { ItemSlideshow } from '../../components/item';
 import { ItemCounter } from '../../components/ui/ItemCounter';
 
 import { dbTickets } from '../../database';
-import { ITicket, ICartProduct } from '../../interfaces';
+import { ITicket } from '../../interfaces';
 
 
 

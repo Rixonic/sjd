@@ -9,9 +9,18 @@ const userSchema = new Schema({
     role: {
         type: String,
         enum: {
-            values: ['admin','client'],
+            values: ['admin','visitante','servicio','tecnico','supervisor'],
             message: '{VALUE} no es un role válido',
-            default: 'client',
+            default: 'visitante',
+            required: true
+        }
+    },
+    sector: {
+        type: String,
+        enum: {
+            values: ['ingenieria','instalaciones','electromedicina','SeH','neonatologia','uti','consultorios','quirofano','imagenes','endoscopia','hemodinamia','internacion','pendiente'],
+            message: '{VALUE} no es un role válido',
+            default: 'pendiente',
             required: true
         }
     }

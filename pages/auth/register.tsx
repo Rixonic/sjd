@@ -82,13 +82,12 @@ const RegisterPage = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                type="email"
-                                label="Correo"
+                                type="text"
+                                label="Usuario"
                                 variant="filled"
                                 fullWidth 
                                 { ...register('email', {
-                                    required: 'Este campo es requerido',
-                                    validate: validations.isEmail
+                                    required: 'Este campo es requerido'
                                     
                                 })}
                                 error={ !!errors.email }

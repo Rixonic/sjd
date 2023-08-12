@@ -49,10 +49,32 @@ const UsersPage = () => {
 
     }
 
+    const onSectorUpdated = async( userId: string, newSector: string ) => {
+
+        const previosUsers = users.map( user => ({ ...user }));
+        const updatedUsers = users.map( user => ({
+            ...user,
+            sector: userId === user._id ? newSector : user.sector
+        }));
+
+        setUsers(updatedUsers);
+
+        try {
+            
+            await tesloApi.put('/admin/users', {  userId, sector: newSector });
+
+        } catch (error) {
+            setUsers( previosUsers );
+            console.log(error);
+            alert('No se pudo actualizar el sector del usuario');
+        }
+
+    }
+
 
     const columns: GridColDef[] = [
-        { field: 'email', headerName: 'Correo', width: 250 },
         { field: 'name', headerName: 'Nombre completo', width: 300 },
+        { field: 'email', headerName: 'Usuario', width: 250 },
         {
             field: 'role', 
             headerName: 'Rol', 
@@ -66,20 +88,29 @@ const UsersPage = () => {
                         sx={{ width: '300px' }}
                     >
                         <MenuItem value='admin'> Admin </MenuItem>
-                        <MenuItem value='client'> Client </MenuItem>
+                        <MenuItem value='supervisor'> Supervisor </MenuItem>
+                        <MenuItem value='tecnico'> Tecnico </MenuItem>
+                        <MenuItem value='servicio'> Servicio </MenuItem>
+                        <MenuItem value='cliente'> Visitante </MenuItem>
 
                     </Select>
                 )
             }
         },
+
     ];
 
-    const rows = users.map( user => ({
+    const excludedUserIds = ['64d38bb56782503e279bf36a', '64d38cdb6782503e279bf38b']; // Agrega aquí los IDs de los usuarios que deseas excluir
+
+    const filteredUsers = users.filter(user => !excludedUserIds.includes(user._id));
+
+    const rows = filteredUsers.map(user => ({
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role
-    }))
+        role: user.role,
+
+    }));
 
 
   return (
@@ -95,8 +126,7 @@ const UsersPage = () => {
                 <DataGrid 
                     rows={ rows }
                     columns={ columns }
-                    pageSize={ 10 }
-                    rowsPerPageOptions={ [10] }
+
                 />
 
             </Grid>

@@ -5,6 +5,7 @@ export interface IUser {
     email    : string;
     password?: string;
     role     : string;
+    sector   : string;
 
     createdAt?: string;
     updatedAt?: string;

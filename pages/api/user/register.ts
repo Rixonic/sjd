@@ -44,12 +44,12 @@ const registerUser = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
             message: 'El nombre debe de ser de 2 caracteres'
         });
     }
-    
+    /*
     if ( !validations.isValidEmail( email ) ) {
         return res.status(400).json({
             message: 'El correo no tiene formato de correo'
         });
-    }
+    }*/
     
     
     await db.connect();
@@ -64,7 +64,8 @@ const registerUser = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
     const newUser = new User({
         email: email.toLocaleLowerCase(),
         password: bcrypt.hashSync( password ),
-        role: 'client',
+        role: 'visitante',
+        sector: 'pendiente',
         name,
     });
 
@@ -88,6 +89,7 @@ const registerUser = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
             email, 
             role, 
             name,
+
         }
     })
 
