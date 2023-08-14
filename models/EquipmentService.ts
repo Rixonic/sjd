@@ -2,7 +2,8 @@ import mongoose, { Schema, model, Model } from 'mongoose';
 import { IEquipmentService } from '../interfaces';
 
 const userSchema = new Schema({
-
+    ownId       : { type: Number, required: true },
+    ecri        : { type: String },
     equip       : { type: String, required: true },
     brand       : { type: String, required: true },
     model       : { type: String, required: true },

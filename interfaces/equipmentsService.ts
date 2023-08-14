@@ -1,6 +1,8 @@
 
 export interface IEquipmentService {
-    _id?        : string;           //propio de la base de datos       
+    _id?        : string;           //propio de la base de datos    
+    ownId       : Number;
+    ecri        : string;   
     equip       : string;
     brand       : string;
     model       : string;

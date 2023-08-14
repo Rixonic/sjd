@@ -17,3 +17,7 @@
   tr:hover td {
     background-color: #ddd;
   }
+
+  .highlight-overdue {
+    background-color: #ffcccc; /* or any other color you prefer */
+  }

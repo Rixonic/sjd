@@ -13,8 +13,8 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
-
-import { IEquipment  } from '../interfaces';
+import { format } from 'date-fns';
+import { IEquipmentService  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
 
@@ -37,56 +37,23 @@ const EquipmentsPage = () =>  {
   //const rerender = React.useReducer(() => ({}), {})[1]
   
 
-  const columns = React.useMemo<ColumnDef<IEquipment>[]>(
+  const columns = React.useMemo<ColumnDef<IEquipmentService>[]>(
     () => [
       {
         header: 'Identificacion',
         footer: props => props.column.id,
         columns: [
           {
-            accessorKey: 'equip',
-            header: ({ table }) => (
-              <>
-                <IconButton
-                  {...{
-                    onClick: table.getToggleAllRowsExpandedHandler(),
-                  }}
-                >
-                  {table.getIsAllRowsExpanded() ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>{' '}
-                ID
-              </>
-            ),
-            cell: ({ row, getValue }) => (
-              <Stack direction="row" spacing={2}>
-
-                <>
-                  {row.getCanExpand() ? (
-                    <IconButton
-                      {...{
-                        onClick: row.getToggleExpandedHandler(),
-                        style: { cursor: 'pointer' },
-                      }}
-                    >
-                      {row.getIsExpanded() ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  ) : (
-                    ''
-                  )}
-                  {getValue()}
-                </>
-              </Stack>
-            ),
+            accessorKey: 'ownId',
+            header: () => 'ID',
             footer: props => props.column.id,
           },
           {
-            accessorFn: row => row.ecri,
-            id: 'ecri',
-            cell: info => info.getValue(),
-            header: () => <span>ECRI</span>,
-            size: 50,
+            accessorKey: 'serialNumber',
+            header: () => 'Serie',
             footer: props => props.column.id,
           },
+
         ],
       },
       {
@@ -94,7 +61,7 @@ const EquipmentsPage = () =>  {
         footer: props => props.column.id,
         columns: [
           {
-            accessorKey: 'equipmentId',
+            accessorKey: 'equip',
             header: () => 'Equipo',
             footer: props => props.column.id,
           },
@@ -109,13 +76,8 @@ const EquipmentsPage = () =>  {
             footer: props => props.column.id,
           },
           {
-            accessorKey: 'sector',
+            accessorKey: 'service',
             header: () => <span>Sector</span>,
-            footer: props => props.column.id,
-          },
-          {
-            accessorKey: 'location',
-            header: 'Ubicacion',
             footer: props => props.column.id,
           },
         ],
@@ -124,15 +86,34 @@ const EquipmentsPage = () =>  {
         header: 'Acciones',
         columns: [
           {
-            id: '_id',
-            cell: ({ row }) => (
-              <Stack direction="row">
-                <IconButton href={`/admin/equipments/${row.original.equip}`}><EditIcon/></IconButton>
-                <IconButton href={`/equipment/${row.original.equip}`}><VisibilityIcon/></IconButton>
-              </Stack>
-            ),
+            accessorKey: 'perfomance',
+            header: () => 'Perfomance',
+            
+            footer: (props) => props.column.id,
+            Cell: (props) => {
+              return (
+                <p style={{ color: props.value === "11/2022" ? "green" : "red" }}>
+                  {props.value}
+                </p>
+              );
+            }
+          },
+          {
+            accessorKey: 'duePerfomance',
+            header: 'Proxima Asistencia',
             footer: props => props.column.id,
           },
+          {
+            accessorKey: 'electricalSecurity',
+            header: 'Seeguridad Electrica',
+            footer: props => props.column.id,
+          },
+          {
+            accessorKey: 'dueElectricalSecurity',
+            header: 'Proxima Asistencia',
+            footer: props => props.column.id,
+          },
+          
         ],
       },
     ],
@@ -149,17 +130,31 @@ const EquipmentsPage = () =>  {
 
 
   const { user } = useContext(AuthContext);
-  console.log(user)
+  //console.log(data[0])
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/api/admin/equipments', {
+        const response = await axios.get('/api/admin/equipmentsService', {
           params: {
-            location: 'CONSULTORIOS', // Agrega el sector del usuario como parámetro
+            //location: 'CONSULTORIOS', // Agrega el sector del usuario como parámetro
             // Agrega otros parámetros de filtro aquí si es necesario, como la ubicación del equipo
           },
         });
-        setData(response.data); 
+
+        const formattedData = response.data.map(equipment => {
+          // Parse date strings into Date objects
+          const parsedEquipment = {
+            ...equipment,
+            perfomance: equipment.perfomance ? format(new Date(equipment.perfomance), 'MM/yyyy') : null,
+            duePerfomance: equipment.duePerfomance ? format(new Date(equipment.duePerfomance), 'MM/yyyy') : null,
+            electricalSecurity: equipment.electricalSecurity ? format(new Date(equipment.electricalSecurity), 'MM/yyyy') : null,
+            dueElectricalSecurity: equipment.dueElectricalSecurity ? format(new Date(equipment.dueElectricalSecurity), 'MM/yyyy') : null,
+          };
+        
+          return parsedEquipment;
+        });
+
+      setData(formattedData); 
       } catch (err) {
         setError(err); 
       }
@@ -169,7 +164,7 @@ const EquipmentsPage = () =>  {
   }, []);
 
   
-
+  console.log(data[0])
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
 
@@ -243,6 +238,7 @@ const EquipmentsPage = () =>  {
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
+                        
                       )}
                     </td>
                   )
@@ -316,7 +312,7 @@ function Filter({
 
   const columnFilterValue = column.getFilterValue()
 
-  return typeof firstValue === 'number' ? (
+  return typeof firstValue === 'Date' ? (
     <div className="flex space-x-2">
       <TextField
         type="number"
