@@ -8,6 +8,7 @@
   }
   td {
     vertical-align: middle;
+
   }
 
   tr:nth-child(even) td {
@@ -21,3 +22,14 @@
   .highlight-overdue {
     background-color: #ffcccc; /* or any other color you prefer */
   }
+
+
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.customColumnColor {
+  text-align: center;
+}

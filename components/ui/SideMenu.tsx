@@ -1,8 +1,8 @@
 import { useContext, useState } from 'react';
 
-import { Box, Divider, Drawer, IconButton, Input, InputAdornment, List, ListItem, ListItemIcon, ListItemText, ListSubheader } from "@mui/material"
+import { Box, Divider, Drawer, IconButton, Input, Stack, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material"
 import { AccountCircleOutlined, AdminPanelSettings, CategoryOutlined, ConfirmationNumberOutlined, EscalatorWarningOutlined, FemaleOutlined, LoginOutlined, MaleOutlined, SearchOutlined, VpnKeyOutlined, DashboardOutlined } from '@mui/icons-material';
-
+import HomeIcon from '@mui/icons-material/Home';
 import { UiContext, AuthContext } from '../../context';
 import { useRouter } from 'next/router';
 
@@ -37,18 +37,28 @@ export const SideMenu = () => {
         <Box sx={{ width: 250, paddingTop: 5 }}>
             
             <List>
+            <Stack
+                direction="column"
+                justifyContent="center"
+                alignItems="center"
+                spacing={5}
+            >
+                <Typography>{user?.name}</Typography>
+            </Stack>
             <Divider />
             <ListSubheader>Menu principal</ListSubheader>
 
                 {
                     isLoggedIn && (
                         <>
-                            <ListItem button>
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/') }>
                                 <ListItemIcon>
-                                    <AccountCircleOutlined/>
+                                    <HomeIcon/>
                                 </ListItemIcon>
-                                <ListItemText primary={'Perfil'} />
-                            </ListItem>
+                                <ListItemText primary={'Home'} />
+                            </ListItem>     
 
                         </>
                     )
@@ -78,14 +88,40 @@ export const SideMenu = () => {
                     )
                 }
 
+                {
+                    
+                        <>
+                            <Divider />
+                            <ListSubheader>Accesos</ListSubheader>
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/equipamiento') }>
+                                <ListItemIcon>
+                                    <CategoryOutlined/>
+                                </ListItemIcon>
+                                <ListItemText primary={'Equipos'} />
+                            </ListItem>      
+
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/dosimetros') }>
+                                <ListItemIcon>
+                                    <CategoryOutlined/>
+                                </ListItemIcon>
+                                <ListItemText primary={'Dosimetros'} />
+                            </ListItem>          
+
+                        </>
+                    
+                }
 
 
                 {/* Admin */}
                 {
-                   
+                   user?.role === 'admin' && (
                         <>
                             <Divider />
-                            <ListSubheader>Gestion</ListSubheader>
+                            <ListSubheader>Gestion tecnica</ListSubheader>
 
 
                             <ListItem 
@@ -104,7 +140,16 @@ export const SideMenu = () => {
                                     <CategoryOutlined/>
                                 </ListItemIcon>
                                 <ListItemText primary={'Equipos'} />
-                            </ListItem>              
+                            </ListItem>      
+
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/admin/dosimeters') }>
+                                <ListItemIcon>
+                                    <CategoryOutlined/>
+                                </ListItemIcon>
+                                <ListItemText primary={'Dosimetros'} />
+                            </ListItem>         
 
                             <ListItem 
                                 button
@@ -126,6 +171,9 @@ export const SideMenu = () => {
 
                 
                         </>
+
+                        
+                   )
                     
                 }
             </List>

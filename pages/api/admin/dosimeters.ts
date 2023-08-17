@@ -6,13 +6,13 @@ import { v2 as cloudinary } from 'cloudinary';
 cloudinary.config( process.env.CLOUDINARY_URL || '' );
 import { format } from 'date-fns';
 import { db } from '../../../database';
-import { IEquipmentService } from '../../../interfaces/equipmentsService';
-import { EquipmentService } from '../../../models';
+import { IDosimeter } from '../../../interfaces/dosimeter';
+import { Dosimeter } from '../../../models';
 
 type Data = 
 | { message: string }
-| IEquipmentService[]
-| IEquipmentService;
+| IDosimeter[]
+| IDosimeter;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
     
@@ -38,32 +38,29 @@ const getEquipments = async(req: NextApiRequest, res: NextApiResponse<Data>) => 
 
     await db.connect();
 
-    let query = EquipmentService.find();
+    let query = Dosimeter.find();
     if (service) {
         query = query.where('service', service);
     }
-
+    
+    query = query.sort({year: -1, month: -1 });
 
     const equipments = await query.lean();
 
-    const sortedEquipments = equipments.sort((a, b) => {
-        const equipA = parseInt(a.equip, 10);
-        const equipB = parseInt(b.equip, 10);
-        return equipA - equipB;
-    });
+
 
     // Verificar y formatear la fecha de perfomance
 
     await db.disconnect();
 
-    res.status(200).json(sortedEquipments);
+    res.status(200).json(equipments);
 
 }
 
 
 const updateEquipment = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
     
-    const { _id = '' } = req.body as IEquipmentService;
+    const { _id = '' } = req.body as IDosimeter;
 
     if ( !isValidObjectId( _id ) ) {
         return res.status(400).json({ message: 'El id del producto no es válido' });
@@ -80,7 +77,7 @@ const updateEquipment = async(req: NextApiRequest, res: NextApiResponse<Data>) =
     try {
         
         await db.connect();
-        const equipment = await EquipmentService.findById(_id);
+        const equipment = await Dosimeter.findById(_id);
         if ( !equipment ) {
             await db.disconnect();
             return res.status(400).json({ message: 'No existe un producto con ese ID' });
@@ -119,13 +116,13 @@ const createEquipment = async(req: NextApiRequest, res: NextApiResponse<Data>) =
     
     try {
         await db.connect();
-        const equipmentInDB = await EquipmentService.findOne({ equip: req.body.equip });
+        const equipmentInDB = await Dosimeter.findOne({ _id: req.body._id });
         if ( equipmentInDB ) {
             await db.disconnect();
             return res.status(400).json({ message: 'Ya existe un producto con ese equipo' });
         }
         
-        const equipment = new EquipmentService( req.body );
+        const equipment = new Dosimeter( req.body );
         await equipment.save();
         await db.disconnect();
 

@@ -1,4 +1,5 @@
 export * from './equipmentsService';
+export * from './dosimeter';
 export * from './dashboard';
 export * from './user';
 export * from './equipments';

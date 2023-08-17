@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 
 import { db } from '../../../database';
-import { Box,IconButton, Button, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import { Link,Box,IconButton, Button, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField, Typography } from '@mui/material';
 import { DriveFileRenameOutline, SaveOutlined, UploadOutlined, AddOutlined} from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -166,7 +166,20 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
         );
     }
 
-
+    const onDownloadImage = (image: string) => {
+        fetch(image)
+            .then((response) => response.blob())
+            .then((blob) => {
+                const url = window.URL.createObjectURL(new Blob([blob]));
+                const link = document.createElement('a');
+                link.href = url;
+                const defaultFileName = 'nombre_predeterminado.pdf';
+                link.setAttribute('download', defaultFileName);
+                document.body.appendChild(link);
+                link.click();
+                link.parentNode?.removeChild(link);
+            });
+    };
 
     const onSubmit = async( form: FormData ) => {
         
@@ -404,7 +417,7 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                                 ref={ fileInputRef }
                                 type="file"
                                 multiple
-                                accept='image/png, image/gif, image/jpeg'
+                                //accept='image/png, image/gif, image/jpeg'
                                 style={{ display: 'none' }}
                                 onChange={ onFilesSelected }
                             />
@@ -436,7 +449,15 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                                                     >
                                                         Borrar
                                                     </Button>
+                                                    
                                                 </CardActions>
+                                                <Button
+                                fullWidth
+                                color="secondary"
+                                onClick={() => onDownloadImage(img)}
+                            >
+                                Descargar
+                            </Button>
                                             </Card>
                                         </Grid>
                                     ))

@@ -27,7 +27,7 @@ export const Navbar = () => {
             <Toolbar>
                     <Link display='flex' alignItems="baseline" href='/'>
                         <Typography variant='h6'>Ingenieria |</Typography>
-                        <Typography sx={{ ml: 0.5 }}>CHSJDD</Typography>
+                        <Typography sx={{ ml: 0.5 }}>HSJD</Typography>
                     </Link>  
 
                 <Box flex={ 1 } />
