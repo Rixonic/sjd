@@ -210,7 +210,7 @@ const EquipmentsPage = () =>  {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <th                     {...{
+                  <th      key= {header.id}                {...{
                     key: header.id,
                     colSpan: header.colSpan,
                     style: {
@@ -238,7 +238,7 @@ const EquipmentsPage = () =>  {
               <tr key={row.id}>
                 {row.getVisibleCells().map(cell => {
                   return (
-                    <td                       {...{
+                    <td     key={cell.id}      {...{
                       key: cell.id,
                       className: cell.id.endsWith('center')  ? 'customColumnColor' : 'defaultColumnColor',
                     }}>
