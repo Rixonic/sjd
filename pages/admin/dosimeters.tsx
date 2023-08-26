@@ -193,7 +193,7 @@ const EquipmentsPage = () =>  {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <th                     {...{
+                  <th  key={header.id} {...{
                     key: header.id,
                     colSpan: header.colSpan,
                     style: {

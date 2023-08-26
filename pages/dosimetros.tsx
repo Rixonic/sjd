@@ -82,18 +82,21 @@ const EquipmentsPage = () =>  {
         footer: props => props.column.id,
         columns: [
           {
-            id:'2center',
             accessorKey: 'month',
             header: 'Mes',
             size: 75,
+            meta: {
+              align: 'center'
+            },
             footer: props => props.column.id,
           },
           {
-            id:'center',
             accessorKey: 'year',
             header: 'Año',
             size: 75,
-            
+            meta: {
+              align: 'center'
+            },
             footer: props => props.column.id,
           },
         ],
@@ -104,16 +107,15 @@ const EquipmentsPage = () =>  {
           {
             id: '_id',
             size: 75,
+            meta: {
+              align: 'center'
+            },
             cell: ({ row }) => (
-              <Stack direction="column">
-                
                 <IconButton
-               
-                                onClick={() => onDownloadImage(row.original.document)}
-                            >
-                              <DownloadIcon/>
-                            </IconButton>
-              </Stack>
+                  onClick={() => onDownloadImage(row.original.document)}
+                >
+                  <DownloadIcon/>
+                </IconButton>
             ),
             footer: props => props.column.id,
           },
@@ -210,7 +212,7 @@ const EquipmentsPage = () =>  {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <th                     {...{
+                  <th key={header.id} {...{
                     key: header.id,
                     colSpan: header.colSpan,
                     style: {
@@ -238,10 +240,10 @@ const EquipmentsPage = () =>  {
               <tr key={row.id}>
                 {row.getVisibleCells().map(cell => {
                   return (
-                    <td                       {...{
-                      key: cell.id,
-                      className: cell.id.endsWith('center')  ? 'customColumnColor' : 'defaultColumnColor',
-                    }}>
+                    <td   
+                    key={cell.id} 
+                    align ={(cell.column.columnDef.meta as any)?.align}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

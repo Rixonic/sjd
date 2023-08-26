@@ -17,9 +17,26 @@ import { format } from 'date-fns';
 import { IEquipmentService  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
-
+import compareAsc from 'date-fns/compareAsc'
+import { isAfter, isBefore, isSameDay } from "date-fns"
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
+/*
+Ejemplos de cosas que si funcionaron
+
+          {
+            accessorKey: 'equip',
+            header: () => 'Equipo',
+            cell: ({ row }) => (
+              <td className={  row.original.equip == "TENSIOMETRO" ? 'bold' : null }>
+              {row.original.equip }
+            </td>
+            ),
+            footer: props => props.column.id,
+          },
+
+*/
+ 
 import {
   Column,
   Table,
@@ -35,6 +52,9 @@ import {
 
 } from '@tanstack/react-table';
 
+const currentDate = new Date();
+console.log(currentDate)
+
 const EquipmentsPage = () =>  {  
 
   const columns = React.useMemo<ColumnDef<IEquipmentService>[]>(
@@ -46,12 +66,17 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'ownId',
             header: () => 'ID',
+            size: 40,
             footer: props => props.column.id,
+            meta: {
+              align: 'center'
+            },
             
           },
           {
             accessorKey: 'serialNumber',
             header: () => 'Serie',
+            size: 200,
             footer: props => props.column.id,
           },
 
@@ -64,6 +89,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'equip',
             header: () => 'Equipo',
+            size: 200,
             footer: props => props.column.id,
           },
           {
@@ -89,24 +115,73 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'perfomance',
             header: () => 'Perfomance',
-            
             footer: (props) => props.column.id,
-
+            meta: {
+              align: 'center'
+            },
           },
           {
             accessorKey: 'duePerfomance',
             header: 'Proxima Asistencia',
+            cell: ({ row }) => {
+              const dueDate = new Date(row.original.duePerfomance);
+              const daysDifference = Math.floor(
+                (dueDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              let className = '';
+              if (daysDifference <= -60 && row.original.duePerfomance) {
+                className = 'red';
+              } else if (daysDifference >= -60 && daysDifference <= 60) {
+                className = 'yellow';
+              } else if (daysDifference >= 60) {
+                className = 'green';
+              }
+          
+              return (
+                <span className={className}>
+                  {row.original.duePerfomance ? format(dueDate, 'MM/yyyy') : null}
+                </span>
+              );
+            },
+            meta: {
+              align: 'center'
+            },
             footer: props => props.column.id,
           },
           {
             accessorKey: 'electricalSecurity',
             header: 'Seguridad Electrica',
-
+            meta: {
+              align: 'center'
+            },
             footer: props => props.column.id,
           },
           {
             accessorKey: 'dueElectricalSecurity',
             header: 'Proxima Asistencia',
+            cell: ({ row }) => {
+              const dueDate = new Date(row.original.dueElectricalSecurity);
+              const daysDifference = Math.floor(
+                (dueDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              let className = '';
+              if (daysDifference <= -60 && row.original.dueElectricalSecurity) {
+                className = 'red';
+              } else if (daysDifference >= -60 && daysDifference <= 60) {
+                className = 'yellow';
+              } else if (daysDifference >= 60) {
+                className = 'green';
+              }
+          
+              return (
+                <span className={className}>
+                  {row.original.dueElectricalSecurity ? format(dueDate, 'MM/yyyy') : null}
+                </span>
+              );
+            },
+            meta: {
+              align: 'center'
+            },
             footer: props => props.column.id,
           },
           
@@ -137,9 +212,9 @@ const EquipmentsPage = () =>  {
           const parsedEquipment = {
             ...equipment,
             perfomance: equipment.perfomance ? format(new Date(equipment.perfomance), 'MM/yyyy') : null,
-            duePerfomance: equipment.duePerfomance ? format(new Date(equipment.duePerfomance), 'MM/yyyy') : null,
+            duePerfomance: equipment.duePerfomance ? new Date(equipment.duePerfomance) : null,
             electricalSecurity: equipment.electricalSecurity ? format(new Date(equipment.electricalSecurity), 'MM/yyyy') : null,
-            dueElectricalSecurity: equipment.dueElectricalSecurity ? format(new Date(equipment.dueElectricalSecurity), 'MM/yyyy') : null,
+            dueElectricalSecurity: equipment.dueElectricalSecurity ? new Date(equipment.dueElectricalSecurity) : null,
           };
         
           return parsedEquipment;
@@ -156,7 +231,6 @@ const EquipmentsPage = () =>  {
   }, [userSector]);
 
   
-  console.log(data[0])
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
 
@@ -181,6 +255,7 @@ const EquipmentsPage = () =>  {
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    
     //debugTable: true,
   })
 
@@ -200,7 +275,13 @@ const EquipmentsPage = () =>  {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <th key={header.id} colSpan={header.colSpan}>
+                  <th key={header.id} {...{
+                    key: header.id,
+                    colSpan: header.colSpan,
+                    style: {
+                      width: header.getSize(),
+                    },
+                  }}>
                     {header.isPlaceholder ? null : (
                       <Box>
                         {flexRender(
@@ -226,7 +307,10 @@ const EquipmentsPage = () =>  {
               <tr key={row.id}>
                 {row.getVisibleCells().map(cell => {
                   return (
-                    <td key={cell.id}>
+                    <td key={cell.id} 
+                    className={(cell.column.columnDef.meta as any)?.className}
+                    align ={(cell.column.columnDef.meta as any)?.align}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

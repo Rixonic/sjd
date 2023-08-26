@@ -13,12 +13,6 @@ export const SideMenu = () => {
     const { isMenuOpen, toggleSideMenu } = useContext( UiContext );
     const { user, isLoggedIn, logout } = useContext(  AuthContext );
 
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const onSearchTerm = () => {
-        if( searchTerm.trim().length === 0 ) return;
-        navigateTo(`/search/${ searchTerm }`);
-    }
 
     
     const navigateTo = ( url: string ) => {

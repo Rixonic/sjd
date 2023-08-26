@@ -24,7 +24,7 @@ export const AdminLayout:FC<Props> = ({ children, title, subTitle, icon }) => {
         <main style={{
             margin: '80px auto',
             maxWidth: '1440px',
-            padding: '0px 30px'
+            //padding: '0px 30px'
         }}>
 
             <Box display="flex" flexDirection='column'>

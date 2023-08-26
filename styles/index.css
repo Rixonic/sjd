@@ -7,8 +7,7 @@
 
   }
   td {
-    vertical-align: middle;
-
+    height: 50px;
   }
 
   tr:nth-child(even) td {
@@ -23,13 +22,18 @@
     background-color: #ffcccc; /* or any other color you prefer */
   }
 
-
-
-.center {
-  margin-left: auto;
-  margin-right: auto;
+.green {
+  background-color: #5bab60;
+  border-radius: 5px;
+  padding: 2px 4px 2px 4px;
 }
-
-.customColumnColor {
-  text-align: center;
+.yellow {
+  background-color: #f5d496;
+  border-radius: 5px;
+  padding: 2px 4px 2px 4px;
+}
+.red {
+  background-color: #dd8080;
+  border-radius: 5px;
+  padding: 2px 4px 2px 4px;
 }
