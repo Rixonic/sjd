@@ -33,14 +33,20 @@ const EquipmentsPage = () =>  {
   sx={{ minHeight: '50vh' }}
   > 
       <Card 
-      sx={{ width: 400  , height:320, boxShadow: 2}}
+      sx={{ width: 400  , height:320, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}
       >
 
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+      <CardContent
+      sx={{ display: 'flex', flexDirection: 'column', alignItems:'center'}}>
+        <Typography gutterBottom variant="h5"  >
           Equipamiento Medico
         </Typography>
-        <AccessibleForwardIcon style={{ fontSize: 150 }} />
+        <CardMedia
+        component="img"
+        sx={{ width: 100 , marginBottom: 3, marginTop:1}}
+        image="https://res.cloudinary.com/dlwkur7zi/image/upload/w9l9sefnvzozeltl2c4g.png"
+        title="resonador"
+      />
         <Typography variant="body2" color="text.secondary">
             Acceso al inventario del equipamiento medico 
         </Typography>
@@ -50,15 +56,21 @@ const EquipmentsPage = () =>  {
       </CardActions>
     </Card>
     
-    <Card sx={{ width: 400 , height:320}}>
+    <Card sx={{ width: 400  , height:320, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}>
 
-      <CardContent>
+      <CardContent 
+      sx={{ display: 'flex', flexDirection: 'column', alignItems:'center'}}>
         <Typography gutterBottom variant="h5" component="div">
           Dosimetros
         </Typography>
-        <AccessibleForwardIcon style={{ fontSize: 150 }} />
+        <CardMedia
+        component="img"
+        sx={{  width: 120, marginBottom: 3, marginTop:1}}
+        image="https://res.cloudinary.com/dlwkur7zi/image/upload/v1692286436/uq2elsqqm3xrn6hp1gyg.png"
+        title="green iguana"
+      />
         <Typography variant="body2" color="text.secondary">
-          Acceso al registro de oximetria mensual
+          Acceso al informe mensual de dosimetria
         </Typography>
       </CardContent>
       
