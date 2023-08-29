@@ -1,17 +1,11 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';    //Queda
-import { useRouter } from 'next/router';                                                //Queda
-
-//import AspectRatio from '@mui/joy/AspectRatio';
+import { useRouter } from 'next/router';       
+import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';                                         //Queda
 import { Box, Button, Chip, Grid, Typography, Divider } from '@mui/material';                    //Queda
-
-//import { CartContext } from '../../context/cart/CartContext';                           //Queda?
-
 import { ShopLayout } from '../../components/layouts';                                  //Queda
-import { ItemSlideshow } from '../../components/item';             //Queda?
-import { ItemCounter } from '../../components/ui/ItemCounter';                          //Queda?
 
-import { dbEquipments } from '../../database';                                            //Se modifica?
+import { dbEquipments, dbTickets } from '../../database';                                            //Se modifica?
 import { IEquipment } from '../../interfaces';                       //Se modifica
 import { AspectRatio } from '@mui/icons-material';
 
@@ -20,10 +14,27 @@ interface Props {
 }
 
 
+
 const EquipmentPage:NextPage<Props> = ({ equipment }) => {
 
-  const router = useRouter();
+  const [tickets, setTickets] = useState([]);
+  
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const fetchedTickets = await dbTickets.getTicketsByEquipmentId(equipment.equipmentId);
+        setTickets(fetchedTickets);
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+      }
+    };
 
+    fetchTickets();
+  }, [equipment.equip]);
+  
+
+  const router = useRouter();
+  console.log(tickets);
   return (
     <ShopLayout title={ equipment.equipmentId } pageDescription={ equipment.equipmentId }>
     
@@ -58,11 +69,27 @@ const EquipmentPage:NextPage<Props> = ({ equipment }) => {
 
             <Grid item xs={12} sm={ 7 }>
               <Typography variant='subtitle2'>Imagenes</Typography>
-                        <ItemSlideshow 
+                        {/*<ItemSlideshow 
                             images={ equipment.images }
-                        />
+                        />*/}
 
           </Grid>
+
+
+          <Grid item xs={12}>
+    <Typography variant="h2">Tickets Asociados</Typography>
+    {tickets.map((ticket) => (
+      <div key={ticket.ticketId}>
+        <Typography variant="body1">
+          Ticket ID: {ticket.ticketId} - Creada en: {ticket.createdAt}
+        </Typography>
+        <a href={`/admin/tickets/${ticket.ticketId}`} target="_blank" rel="noreferrer">
+          Editar ticket
+        </a>
+        
+      </div>
+    ))}
+  </Grid>
 
 
       </Grid>

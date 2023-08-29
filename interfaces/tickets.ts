@@ -9,7 +9,7 @@ export interface ITicket {
     detail      : string;           //Detalle del ticket
     user        : string;           //Quien creo el ticket
     assignedTo  : string;           //Usuario asignado
-    associatedEquipId: string; //Equipo asociado
+    equipId     : string; //Equipo asociado
     comment     : IComment[];       //Aca se cargan todos los comentarios, varios
     diagnostic  : IDiagonstic;      //Aca se cargan todos los comentarios
     createdAt?  : string;           //Fecha de creacion del ticket

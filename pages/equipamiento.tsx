@@ -76,7 +76,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'serialNumber',
             header: () => 'Serie',
-            size: 200,
+            size: 170,
             footer: props => props.column.id,
           },
 
@@ -104,6 +104,7 @@ const EquipmentsPage = () =>  {
           },
           {
             accessorKey: 'service',
+            size: 120,
             header: () => <span>Sector</span>,
             footer: props => props.column.id,
           },
@@ -115,6 +116,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'perfomance',
             header: () => 'Perfomance',
+            size: 100,
             footer: (props) => props.column.id,
             meta: {
               align: 'center'
@@ -123,6 +125,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'duePerfomance',
             header: 'Proxima Asistencia',
+            size: 100,
             cell: ({ row }) => {
               const dueDate = new Date(row.original.duePerfomance);
               const daysDifference = Math.floor(
@@ -151,6 +154,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'electricalSecurity',
             header: 'Seguridad Electrica',
+            size: 100,
             meta: {
               align: 'center'
             },
@@ -159,6 +163,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'dueElectricalSecurity',
             header: 'Proxima Asistencia',
+            size: 100,
             cell: ({ row }) => {
               const dueDate = new Date(row.original.dueElectricalSecurity);
               const daysDifference = Math.floor(

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { Box, Button, Chip, Grid, Typography } from '@mui/material';
 
 import { ShopLayout } from '../../components/layouts';
-import { ItemSlideshow } from '../../components/item';
+//import { ItemSlideshow } from '../../components/item';
 import { ItemCounter } from '../../components/ui/ItemCounter';
 
 import { dbTickets } from '../../database';
@@ -84,9 +84,9 @@ const TicketPage:NextPage<Props> = ({ ticket }) => {
         </Grid>
 
         <Grid item xs={12} sm={ 7 }>
-          <ItemSlideshow 
+          {/*<ItemSlideshow 
             images={ ticket.images }
-          />
+  />*/}
         </Grid>
 
       </Grid>

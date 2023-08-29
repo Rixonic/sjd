@@ -6,6 +6,16 @@ import HomeIcon from '@mui/icons-material/Home';
 import { UiContext, AuthContext } from '../../context';
 import { useRouter } from 'next/router';
 
+import CssBaseline from '@mui/material/CssBaseline';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+
+import ListItemButton from '@mui/material/ListItemButton';
+
+import InboxIcon from '@mui/icons-material/MoveToInbox';
+import MailIcon from '@mui/icons-material/Mail';
+
+const drawerWidth = 240;
 
 export const SideMenu = () => {
 
@@ -13,6 +23,12 @@ export const SideMenu = () => {
     const { isMenuOpen, toggleSideMenu } = useContext( UiContext );
     const { user, isLoggedIn, logout } = useContext(  AuthContext );
 
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const onSearchTerm = () => {
+        if( searchTerm.trim().length === 0 ) return;
+        navigateTo(`/search/${ searchTerm }`);
+    }
 
     
     const navigateTo = ( url: string ) => {
@@ -22,7 +38,7 @@ export const SideMenu = () => {
 
 
   return (
-    <Drawer
+<Drawer
         open={ isMenuOpen }
         anchor='right'
         sx={{ backdropFilter: 'blur(4px)', transition: 'all 0.5s ease-out' }}
@@ -103,7 +119,15 @@ export const SideMenu = () => {
                                     <CategoryOutlined/>
                                 </ListItemIcon>
                                 <ListItemText primary={'Dosimetros'} />
-                            </ListItem>          
+                            </ListItem>       
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/tickets') }>
+                                <ListItemIcon>
+                                    <ConfirmationNumberOutlined/>
+                                </ListItemIcon>
+                                <ListItemText primary={'Tickets'} />
+                            </ListItem>   
 
                         </>
                     

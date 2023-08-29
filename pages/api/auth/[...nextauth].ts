@@ -24,9 +24,6 @@ export default NextAuth({
 
       }
     }),
-
-
-
   ],
 
   // Custom Pages
@@ -50,7 +47,7 @@ export default NextAuth({
   callbacks: {
 
     async jwt({ token, account, user }) {
-      // console.log({ token, account, user });
+       //console.log({ token, account, user });
 
       if ( account ) {
         token.accessToken = account.access_token;
@@ -73,7 +70,7 @@ export default NextAuth({
 
 
     async session({ session, token, user }){
-      // console.log({ session, token, user });
+      //console.log({ session, token, user });
 
       session.accessToken = token.accessToken; //session.accessToken = token.accessToken; => session.token = token.accessToken;
       session.user = token.user as any;

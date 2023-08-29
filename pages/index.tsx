@@ -33,7 +33,7 @@ const EquipmentsPage = () =>  {
   sx={{ minHeight: '50vh' }}
   > 
       <Card 
-      sx={{ width: 400  , height:320, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}
+      sx={{ width: 400  , height:400, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}
       >
 
       <CardContent
@@ -56,8 +56,7 @@ const EquipmentsPage = () =>  {
       </CardActions>
     </Card>
     
-    <Card sx={{ width: 400  , height:320, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}>
-
+    <Card sx={{ width: 400  , height:400, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}>
       <CardContent 
       sx={{ display: 'flex', flexDirection: 'column', alignItems:'center'}}>
         <Typography gutterBottom variant="h5" component="div">
@@ -67,23 +66,41 @@ const EquipmentsPage = () =>  {
         component="img"
         sx={{  width: 120, marginBottom: 3, marginTop:1}}
         image="https://res.cloudinary.com/dlwkur7zi/image/upload/v1692286436/uq2elsqqm3xrn6hp1gyg.png"
-        title="green iguana"
+        title=""
       />
         <Typography variant="body2" color="text.secondary">
           Acceso al informe mensual de dosimetria
         </Typography>
       </CardContent>
-      
-
-        <CardActions sx={{ justifyContent:"space-evenly"}} >
+          <CardActions sx={{ justifyContent:"space-evenly"}} >
         <Button variant="outlined" href="/dosimetros" color="primary"  size="large">Ir a</Button>
-        </CardActions> 
-
-        
-      
+        </CardActions>       
     </Card>
-    
+    <Card sx={{ width: 400  , height:400, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}>
+      <CardContent 
+      sx={{ display: 'flex', flexDirection: 'column', alignItems:'center'}}>
+        <Typography gutterBottom variant="h5" component="div">
+          Plan de evacuacion
+        </Typography>
+        <CardMedia
+        component="img"
+        sx={{  width: 120, marginBottom: 3, marginTop:1}}
+        image="https://res.cloudinary.com/dlwkur7zi/image/upload/v1692286436/pejpjugw4u3eqspzlj3i.png"
+        title=""
+      />
+        <Typography variant="body2" color="text.secondary">
+          Plan de evacuacion
+        </Typography>
+      </CardContent>
+          <CardActions sx={{ justifyContent:"space-evenly"}} >
+        <Button target="_blank" rel="noopener noreferrer"  variant="outlined" href="https://res.cloudinary.com/dlwkur7zi/image/upload/v1692286436/plan_de_evacuacion_ramosmejia.pdf" color="primary"  size="large"style={{maxWidth: '140px', minWidth: '140px'}}>Ramos Mejia</Button>
+        <Button target="_blank" rel="noopener noreferrer" variant="outlined" href="https://res.cloudinary.com/dlwkur7zi/image/upload/v1692286436/plan_de_evacuacion_castelar.pdf" color="primary"  size="large"style={{maxWidth: '140px',  minWidth: '140px',}}>Castelar</Button>
+        </CardActions>       
+        <Button target="_blank" rel="noopener noreferrer" variant="outlined" href="https://drive.google.com/file/d/1NDRgqel4QupihMmCOC-3utIJDIPLdCsY/view?usp=sharing" color="primary"  size="large"style={{maxWidth: '140px',  minWidth: '140px',}}>Video</Button>
+    </Card>
     </Stack>
+
+
         
         
         

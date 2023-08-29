@@ -13,13 +13,13 @@ export async function middleware(req: NextRequest){
 
         return NextResponse.redirect (url);
     }
-
+/*
     if (req.nextUrl.pathname.startsWith('/admin')) {
         if (session.user.role !== 'admin') {
             return NextResponse.redirect (new URL('/', req.url));
         }
     }
-    
+    */
     return NextResponse.next();
 }
 
