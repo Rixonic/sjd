@@ -3,8 +3,6 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models';
 import { db } from './';
 
-
-
 export const checkUserEmailPassword = async( email: string, password: string ) => {
 
     await db.connect();
@@ -51,3 +49,19 @@ export const oAUthToDbUser = async( oAuthEmail: string, oAuthName: string ) => {
 
 }
 
+export const getUserData = async( email: string ) => {
+
+    await db.connect();
+    const user = await User.findOne({ email: email });
+
+    if ( user ) {
+        await db.disconnect();
+        const { _id, name, email, role } = user;
+        return { _id, name, email, role };
+    }
+
+    await db.disconnect();
+
+    return null;
+
+}

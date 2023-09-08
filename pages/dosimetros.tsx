@@ -1,23 +1,12 @@
 import NextLink from 'next/link';
 import React, {useContext, HTMLAttributes, HTMLProps , useState, useEffect} from 'react'
-import { Box, Typography, Stack, Grid} from '@mui/material'
 import DownloadIcon from '@mui/icons-material/Download';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { AdminLayout } from '../components/layouts'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import Button from '@mui/material/Button';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
 import { format } from 'date-fns';
 import { IDosimeter  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
-
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
 import {
@@ -34,6 +23,7 @@ import {
 
 
 } from '@tanstack/react-table';
+import { TheTable } from '../components/table';
 
 const EquipmentsPage = () =>  {  
   const onDownloadImage = (image: string) => {
@@ -52,8 +42,7 @@ const EquipmentsPage = () =>  {
 };
 
 
-  const columns = React.useMemo<ColumnDef<IDosimeter>[]>(
-    () => [
+  const columns :ColumnDef<IDosimeter>[]=[
       
       {
         header: 'Informacion',
@@ -121,11 +110,11 @@ const EquipmentsPage = () =>  {
           },
         ],
       },
-    ],
-    []
-  )
+    ]
+
 
   const [data, setData] = useState([]);
+  //const { data } = useSWR<IDosimeter[]>('/api/admin/dosimeter'); 
 
   const [error, setError] = useState(null);
 
@@ -169,30 +158,16 @@ const EquipmentsPage = () =>  {
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      expanded,
-      
-    },
-    paginateExpandedRows: false,
-    initialState: {
-      pagination: {
-          pageSize: 10,
-      },
-
-
-  },
-    onExpandedChange: setExpanded,
-    getSubRows: row => row.associatedEquip,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    //debugTable: true,
-  })
-
+  const rows = data?.map( ticket => ({   //
+    //id    : ticket.ticketId,
+    /*
+    email : (ticket.user as IUser).email,
+    name  : (ticket.user as IUser).name,
+    total : ticket.total,
+    isPaid: order.isPaid,
+    noProducts: order.numberOfItems,*/
+    //createdAt: ticket.createdAt,
+}));
   return (
 
     <AdminLayout 
@@ -200,110 +175,12 @@ const EquipmentsPage = () =>  {
         subTitle={''}
         icon={ <CategoryOutlined /> }
     >
-      <Stack
-  direction="column"
-  justifyContent="space-between"
-  alignItems="center"
-  spacing={2}
->
-      <table>
-        <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header => {
-                return (
-                  <th key={header.id} {...{
-                    key: header.id,
-                    colSpan: header.colSpan,
-                    style: {
-                      width: header.getSize(),
-                    },
-                  }}>
-                    {header.isPlaceholder ? null : (
-                      <Box>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+      <TheTable           
+        data={data} 
+        columns={columns} 
+        />
 
-                      </Box>
-                    )}
-                  </th>
-                )
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => {
-            return (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => {
-                  return (
-                    <td   
-                    key={cell.id} 
-                    align ={(cell.column.columnDef.meta as any)?.align}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                        
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      
-      <Stack
-  direction="row"
-  justifyContent="space-between"
-  alignItems="center"
-  spacing={30}
->
-      <Stack direction="row" >
-        <IconButton
-          onClick={() => {table.setPageIndex(0);}}
-          disabled={!table.getCanPreviousPage()}
-        >
-          <FirstPageIcon />
-        </IconButton>
-          <IconButton
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          <NavigateBeforeIcon />
-        </IconButton>
-          <IconButton
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          <NavigateNextIcon />
-        </IconButton>
-        <IconButton
-          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-          disabled={!table.getCanNextPage()}
-        >
-          <LastPageIcon />
-        </IconButton>
-        </Stack>
-        <span className="flex items-center gap-1">
-          <div>Page:<strong>
-            {table.getState().pagination.pageIndex + 1} of{' '}
-            {table.getPageCount()}
-          </strong></div>
-        </span>
-
-        
-
-        
-        </Stack>
-        
-        </Stack>
-        
+   
     </AdminLayout>
 
 

@@ -49,7 +49,7 @@ export const EquipmentCard: FC<Props> = ({ equipment }) => {
 
           <Box sx={{ mt: 1, display: isImageLoaded ? 'block' : 'none' }} className='fadeIn'>
               <Typography fontWeight={700}>{ equipment.equip }</Typography>
-              <Typography fontWeight={500}>{ `$${equipment.equipmentId}` }</Typography>
+              <Typography fontWeight={500}>{ `$${equipment.equipId}` }</Typography>
           </Box>
       </Grid>
     )

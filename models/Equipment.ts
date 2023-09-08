@@ -1,13 +1,12 @@
 import mongoose, { Schema, model, Model } from 'mongoose';
 import { IEquipment } from '../interfaces';
 
-
 const equipmentSchema = new Schema({
-    equipmentId: { type: String, required: true },
+    equipId: { type: String, required: true,unique: true },
     model: { type: String, required: true, default: '' },
     brand: { type: String, required: true, default: '' },
     sector: { type: String, required: true, default: '' },
-    equip: { type: String, required: true, default: '' ,unique: true},
+    equip: { type: String, required: true, default: '' },
     location: {
         type: String,
         enum: {
@@ -24,7 +23,7 @@ const equipmentSchema = new Schema({
     }],
     images: [{ type: String }],
     ecri: { type: String, required: true, default: '' },
-    serialNumber: { type: String, required: true}, //agregar el unique: true cuando se corriga el numero de serie
+    serialNumber: { type: String, required: true , default: '' }, //agregar el unique: true cuando se corriga el numero de serie
     criticalType: {
         type: String,
         enum: {
@@ -32,21 +31,15 @@ const equipmentSchema = new Schema({
             message: '{VALUE} no es un tipo válido'
         },
     },
-    associatedEquip: [{
-        _id: { type: String },
-        equip: { type: String },
-        equipmentId: { type: String },
-        brand: { type: String },
-        model: { type: String },
-        quantity: { type: Number },
-        serialNumber: { type: String },
-    }]
-
+    perfomance  : { type: Date },
+    duePerfomance: { type: Date },
+    electricalSecurity: { type: Date },
+    dueElectricalSecurity: { type: Date },
 
 },{
     timestamps: true
 });
-
+equipmentSchema.add({associatedEquip: [equipmentSchema]})
 
 equipmentSchema.index({ title: 'text', tags: 'text' });
 

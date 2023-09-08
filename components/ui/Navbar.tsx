@@ -1,46 +1,51 @@
 import { useContext, useState } from 'react';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
 
-import { AppBar, Badge, Box, Button, IconButton, Input, InputAdornment, Link, Toolbar, Typography } from '@mui/material';
+import {  Badge, Box, Button, IconButton, Input, InputAdornment, Link, Toolbar, Typography } from '@mui/material';
 import { ClearOutlined, SearchOutlined, ShoppingCartOutlined } from '@mui/icons-material';
 
 import { UiContext } from '../../context';
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+import { styled, useTheme } from '@mui/material/styles';
+
+import { drawerWidth } from '../constants';
+interface AppBarProps extends MuiAppBarProps {
+    open?: boolean;
+  }
+  
+  const AppBar = styled(MuiAppBar, {
+    shouldForwardProp: (prop) => prop !== 'open',
+  })<AppBarProps>(({ theme, open }) => ({
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    ...(open && {
+      width: `calc(100% - ${drawerWidth}px)`,
+      marginLeft: `${drawerWidth}px`,
+      transition: theme.transitions.create(['margin', 'width'], {
+        easing: theme.transitions.easing.easeOut,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+    }),
+  }));
+
 
 export const Navbar = () => {
 
-    const { asPath, push } = useRouter();
-    const { toggleSideMenu } = useContext( UiContext );
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isSearchVisible, setIsSearchVisible] = useState(false);
-
-    const onSearchTerm = () => {
-        if( searchTerm.trim().length === 0 ) return;
-        push(`/search/${ searchTerm }`);
-    }
-
-    
+    const { isMenuOpen, toggleSideMenu } = useContext( UiContext );
+    //const { toggleSideMenu } = useContext( UiContext );
 
     return (
-        <AppBar>
+        <AppBar open={isMenuOpen}>
             <Toolbar>
-                    <Link display='flex' alignItems="baseline" href='/'>
-                        <Typography variant='h6'>Ingenieria |</Typography>
-                        <Typography sx={{ ml: 0.5 }}>HSJD</Typography>
-                    </Link>  
-
-                <Box flex={ 1 } />
-
-
+            <Button onClick={ toggleSideMenu }>
+                    Menú
+                </Button>
 
 
                 <Box flex={ 1 } />
-                
-                
 
-               
-
+                <Box flex={ 1 } />
 
                 {/* Pantallas pequeñas */}
                 <IconButton
@@ -52,10 +57,11 @@ export const Navbar = () => {
 
 
 
+                <Link display='flex' alignItems="baseline" href='/'>
+                        <Typography variant='h6'>Ingenieria |</Typography>
+                        <Typography sx={{ ml: 0.5 }}>HSJD</Typography>
+                    </Link>  
 
-                <Button onClick={ toggleSideMenu }>
-                    Menú
-                </Button>
 
             </Toolbar>
         </AppBar>

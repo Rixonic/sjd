@@ -23,7 +23,7 @@ const validCriticalType = ['CRITICO','NO CRITICO']
 interface FormData {
     _id?: string;
     equip: string;
-    equipmentId: string;
+    equipId: string;
     model: string;
     brand: string;
     sector: string;
@@ -34,9 +34,8 @@ interface FormData {
     serialNumber: string;
     criticalType: string;
     associatedEquip: {
-        _id: string;
         equip: string;
-        equipmentId: string;
+        equipId: string;
         brand: string;
         model: string;
         quantity: number;
@@ -81,13 +80,13 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
     const onAddAssociatedEquip = () => {
         setValue('associatedEquip', [...getValues('associatedEquip'), {
-            _id: '',
-            equip: '',
-            equipmentId: '',
-            brand: '',
-            model: '',
+
+            equipId: '',
+            equip: 'asdasd',
+            brand: 'asdasd',
+            model: 'asdasd',
             quantity: 0,
-            serialNumber: '',
+            serialNumber: '123123',
         }], { shouldValidate: true });
     };
 
@@ -244,11 +243,11 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                             fullWidth 
                             multiline
                             sx={{ mb: 1 }}
-                            { ...register('equip', {
+                            { ...register('equipId', {
                                 required: 'Este campo es requerido',
                             })}
-                            error={ !!errors.equipmentId }
-                            helperText={ errors.equipmentId?.message }
+                            error={ !!errors.equipId }
+                            helperText={ errors.equipId?.message }
                         />
 
                         <TextField
@@ -256,7 +255,7 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                             //variant="filled"
                             fullWidth 
                             sx={{ mb: 1 }}
-                            { ...register('equipmentId', {
+                            { ...register('equip', {
                                 required: 'Este campo es requerido',
                                 minLength: { value: 1, message: 'Mínimo 2 caracteres' }
                             })}
@@ -483,27 +482,27 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
                                             <TextField
                                                 label="ID"
                                                 fullWidth
-                                                {...register(`associatedEquip.${index}._id`, {
+                                                {...register(`associatedEquip.${index}.equipId`, {
                                                     required: 'Este campo es requerido',
                                                 })}
-                                                value={associatedEquip._id}
-                                                onChange={(e) => onAssociatedEquipChange(index, '_id', e.target.value)}
-                                                error={!!errors?.associatedEquip?.[index]?._id}
-                                                helperText={errors?.associatedEquip?.[index]?._id?.message}
+                                                value={associatedEquip.equipId}
+                                                onChange={(e) => onAssociatedEquipChange(index, 'equipId', e.target.value)}
+                                                error={!!errors?.associatedEquip?.[index]?.equipId}
+                                                helperText={errors?.associatedEquip?.[index]?.equipId?.message}
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={3}>
                                             <TextField
                                                 label="Equipo"
                                                 fullWidth
-                                                {...register(`associatedEquip.${index}.equipmentId`, {
+                                                {...register(`associatedEquip.${index}.equip`, {
                                                     required: 'Este campo es requerido',
                                                     minLength: { value: 1, message: 'Mínimo 2 caracteres' },
                                                 })}
-                                                value={associatedEquip.equipmentId}
-                                                onChange={(e) => onAssociatedEquipChange(index, 'equipmentId', e.target.value)}
-                                                error={!!errors?.associatedEquip?.[index]?.equipmentId}
-                                                helperText={errors?.associatedEquip?.[index]?.equipmentId?.message}
+                                                value={associatedEquip.equip}
+                                                onChange={(e) => onAssociatedEquipChange(index, 'equip', e.target.value)}
+                                                error={!!errors?.associatedEquip?.[index]?.equip}
+                                                helperText={errors?.associatedEquip?.[index]?.equip?.message}
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={3}>
@@ -545,13 +544,13 @@ const EquipmentAdminPage:FC<Props> = ({ equipment }) => {
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     
-    const { equip = ''} = query;
+    const { equipId = ''} = query;
     
     let equipment: IEquipment | null;
 
    // const { data, error } = useSWR<IEquipment[]>('/api/admin/equipments');  
 
-    if ( equip === 'new' ) {
+    if ( equipId === 'new' ) {
         // crear un producto\
         
         const tempEquipment = JSON.parse( JSON.stringify( new Equipment() ) );
@@ -561,11 +560,11 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
         
         equipment = tempEquipment;
         await db.connect();
-        equipment.equip = (await Equipment.count() + 1).toString()
+        equipment.equipId = (await Equipment.count() + 1).toString()
         await db.disconnect();
 
     } else {
-        equipment = await dbEquipments.getEquipmentByEquip(equip.toString());
+        equipment = await dbEquipments.getEquipmentByEquipId(equipId.toString());
     }
 
     if ( !equipment ) {

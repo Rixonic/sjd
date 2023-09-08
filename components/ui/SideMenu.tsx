@@ -1,35 +1,17 @@
 import { useContext, useState } from 'react';
 
-import { Box, Divider, Drawer, IconButton, Input, Stack, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material"
-import { AccountCircleOutlined, AdminPanelSettings, CategoryOutlined, ConfirmationNumberOutlined, EscalatorWarningOutlined, FemaleOutlined, LoginOutlined, MaleOutlined, SearchOutlined, VpnKeyOutlined, DashboardOutlined } from '@mui/icons-material';
+import { Box, Divider, Drawer, Stack, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material"
+import { AdminPanelSettings, CategoryOutlined, ConfirmationNumberOutlined, LoginOutlined, VpnKeyOutlined, DashboardOutlined } from '@mui/icons-material';
 import HomeIcon from '@mui/icons-material/Home';
 import { UiContext, AuthContext } from '../../context';
 import { useRouter } from 'next/router';
-
-import CssBaseline from '@mui/material/CssBaseline';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-
-import ListItemButton from '@mui/material/ListItemButton';
-
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-
-const drawerWidth = 240;
+import { drawerWidth } from '../constants';
 
 export const SideMenu = () => {
 
     const router = useRouter();
     const { isMenuOpen, toggleSideMenu } = useContext( UiContext );
     const { user, isLoggedIn, logout } = useContext(  AuthContext );
-
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const onSearchTerm = () => {
-        if( searchTerm.trim().length === 0 ) return;
-        navigateTo(`/search/${ searchTerm }`);
-    }
-
     
     const navigateTo = ( url: string ) => {
         toggleSideMenu();
@@ -38,24 +20,24 @@ export const SideMenu = () => {
 
 
   return (
-<Drawer
-        open={ isMenuOpen }
-        anchor='right'
-        sx={{ backdropFilter: 'blur(4px)', transition: 'all 0.5s ease-out' }}
-        onClose={ toggleSideMenu }
+    <Drawer
+    //variant="permanent"
+    variant="persistent"
+    sx={{
+      width: drawerWidth,
+      flexShrink: 0,
+      [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+    }}
+    open={ isMenuOpen }
+
     >
-        <Box sx={{ width: 250, paddingTop: 5 }}>
+        <Box sx={{ width: drawerWidth-1, paddingTop: 5 }}>
             
             <List>
-            <Stack
-                direction="column"
-                justifyContent="center"
-                alignItems="center"
-                spacing={5}
-            >
-                <Typography>{user?.name}</Typography>
-            </Stack>
-            <Divider />
+
+                <Typography textAlign={'center'} marginBottom={1}>{user?.name}</Typography>
+
+            <Divider variant="middle" />
             <ListSubheader>Menu principal</ListSubheader>
 
                 {
@@ -101,7 +83,7 @@ export const SideMenu = () => {
                 {
                     
                         <>
-                            <Divider />
+                            <Divider variant="middle" />
                             <ListSubheader>Accesos</ListSubheader>
                             <ListItem 
                                 button
@@ -138,7 +120,7 @@ export const SideMenu = () => {
                 {
                    user?.role === 'admin' && (
                         <>
-                            <Divider />
+                            <Divider variant="middle" />
                             <ListSubheader>Gestion tecnica</ListSubheader>
 
 
@@ -185,9 +167,19 @@ export const SideMenu = () => {
                                     <AdminPanelSettings/>
                                 </ListItemIcon>
                                 <ListItemText primary={'Usuarios'} />
-                            </ListItem>     
+                            </ListItem>   
 
-                
+
+                            <Divider variant="middle" />
+                            <ListSubheader>Testing</ListSubheader>
+                            <ListItem 
+                                button
+                                onClick={ () => navigateTo('/admin/sensors') }>
+                                <ListItemIcon>
+                                    <AdminPanelSettings/>
+                                </ListItemIcon>
+                                <ListItemText primary={'Usuarios'} />
+                            </ListItem>   
                         </>
 
                         

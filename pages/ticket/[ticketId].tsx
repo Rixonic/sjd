@@ -1,134 +1,240 @@
 import { useState, useContext } from 'react';
 import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
-
-import { Box, Button, Chip, Grid, Typography } from '@mui/material';
-
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import { Box, Button,Stack, Chip, Grid, Typography, Divider, Container, TextField} from '@mui/material';
+import { format } from 'date-fns';
 import { ShopLayout } from '../../components/layouts';
-//import { ItemSlideshow } from '../../components/item';
+import { ItemSlideshow } from '../../components/item';
+import { ItemComment } from '../../components/item';
 import { ItemCounter } from '../../components/ui/ItemCounter';
+import Avatar from '@mui/material/Avatar';
+import { dbTickets, dbUsers } from '../../database';
+import { ITicket, IUser } from '../../interfaces';
+import Paper from '@mui/material/Paper';
+import CardActions from '@mui/material/CardActions';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 
-import { dbTickets } from '../../database';
-import { ITicket } from '../../interfaces';
+const sideSeparation = 5;
+const mainSeparation = 2;
 
-
-
+import { UiContext, AuthContext } from '../../context';
+import { Margin } from '@mui/icons-material';
 interface Props {
-  ticket: ITicket
+  ticket: ITicket,
 }
 
-
 const TicketPage:NextPage<Props> = ({ ticket }) => {
+  const { user, isLoggedIn, logout } = useContext(  AuthContext );
+  console.log(user)
 
-  const router = useRouter();
-  /*
-  const { addProductToCart } = useContext( CartContext )
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({
-    _id: ticket._id,
-    image: ticket.images[0],
-    price: ticket.price,
-    size: undefined,
-    slug: ticket.ticketId,
-    title: ticket.title,
-    gender: ticket.gender,
-    quantity: 1,
-  })
+  const [comments, setComments] = useState(ticket.comments || []);
+  const [newComment, setNewComment] = useState('');
 
-  const selectedSize = ( size: ISize ) => {
-    setTempCartProduct( currentProduct => ({
-      ...currentProduct,
-      size
-    }));
+const addComment = async () => {
+  if (newComment.trim() === '') {
+    return;
+  }
+  
+  try {
+    setIsSaving(true);
+    const response = await fetch('/api/admin/tickets', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: ticket._id, // Assuming ticket._id is the ID of the current ticket
+        comments: [
+          {
+            user: user.name, // Replace with actual user ID
+            comment: newComment,
+            createdAt: new Date(),
+          },
+          ...comments, // Keep the existing comments
+        ],
+      }),
+    });
+
+    if (response.ok) {
+      // Comment successfully added to the server
+      const updatedTicket = await response.json();
+      setComments(updatedTicket.comments);
+      setNewComment('');
+    } else {
+      // Handle error
+      console.error('Error adding comment');
+    }
+  } catch (error) {
+    console.error('Error adding comment', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+  function stringToColor(string: string) {
+    let hash = 0;
+    let i;
+  
+    /* eslint-disable no-bitwise */
+    for (i = 0; i < string.length; i += 1) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+  
+    let color = '#';
+  
+    for (i = 0; i < 3; i += 1) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += `00${value.toString(16)}`.slice(-2);
+    }
+    /* eslint-enable no-bitwise */
+  
+    return color;
   }
 
-  const onUpdateQuantity = ( quantity: number ) => {
-    setTempCartProduct( currentProduct => ({
-      ...currentProduct,
-      quantity
-    }));
+  function stringAvatar(name: string, size:number) {
+    return {
+      sx: {
+        bgcolor: stringToColor(name),
+        width: size, 
+        height: size,
+        fontSize: size/2,
+      },
+      children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+    };
   }
-
-
-  const onAddProduct = () => {
-
-    if ( !tempCartProduct.size ) { return; }
-
-    addProductToCart(tempCartProduct);
-    router.push('/cart');
-  }
-*/
 
   return (
     <ShopLayout title={ ticket.ticketId } pageDescription={ ticket.summary }>
-    
-      <Grid container spacing={3}>
-
-        
-
-        <Grid item xs={ 12 } sm={ 5 }>
-          <Box display='flex' flexDirection='column'>
-
+      <Grid container >
+        <Grid item xs={ 12 } sm={ 8 }>
+          <Box display='flex' flexDirection='column' gap={1}>
             {/* titulos */}
-            <Typography variant='h1' component='h1'>{ ticket.ticketId }</Typography>
-            <Typography variant='subtitle1' component='h2'>{ `$${ticket.summary}` }</Typography>
-
-
+            <Box display='flex' flexDirection='row' gap={1}>
+              <Typography variant='subtitle1' component='h2'>{ `Ticket Nro:` }</Typography>
+              <Typography variant='h1' component='h1' >{ ticket.ticketId }</Typography>
+            </Box>
             {/* Descripción */}
             <Box sx={{ mt:3 }}>
-              <Typography variant='subtitle2'>Descripción</Typography>
-              <Typography variant='body2'>{ ticket.detail }</Typography>
+              <Typography variant='subtitle2'>Problema:</Typography>
+              <Typography variant='body2' paddingLeft={mainSeparation}>{ ticket.summary }</Typography>
             </Box>
-
+        
+            <Box sx={{ mt:3 }}>
+              <Typography variant='subtitle2'>Descripción:</Typography>
+              <Typography variant='body1' paddingLeft={mainSeparation}>{ ticket.detail }</Typography>
+            </Box>
+            {ticket.images && ticket.images.length > 0 ? (
+              <ItemSlideshow images={ticket.images} />
+            ) : (
+              <Typography variant='subtitle2' component='h2'>No hay imagenes asociadas</Typography>
+            )}
+          </Box>
+          {/* Comentarios */}
+          <Box sx={{ mt: 3 }}>
+            <Grid item xs={12} sm={12}>
+              <Box display='flex' flexDirection='column' gap={2}>
+                <Typography variant='h1' >Comentarios</Typography>
+                <Stack
+                  direction="column"
+                  justifyContent="flex-start"
+                  alignItems="flex-start"
+                  spacing={1}
+                >
+                  {comments.map((comment) => (
+                    <Card sx={{ maxWidth: 545 , width: 400 } }  key={format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm:ss')} >
+                      <CardHeader
+                        avatar={<Avatar {...stringAvatar(comment.user,35)} />}
+                        title={comment.user}
+                        subheader={ format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm') }
+                      />
+                      <Divider variant="middle" />
+                      <CardActions>
+                        <Typography variant="body2" color="text.secondary">{comment.comment}</Typography>
+                      </CardActions>
+                    </Card>
+                  ))}
+                </Stack>
+                <Divider variant="middle" />
+                <Box display='flex' flexDirection='row' alignItems={'center'} gap={2}>
+                  <TextField
+                    label="Agregar comentario"
+                    multiline
+                    rows={2}
+                    fullWidth
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                  <Button onClick={addComment}>Agregar Comentario</Button>
+                </Box>
+              </Box>
+            </Grid> 
           </Box>
         </Grid>
-
-        <Grid item xs={12} sm={ 7 }>
-          {/*<ItemSlideshow 
-            images={ ticket.images }
-  />*/}
-        </Grid>
-
+        {/*Sector lateral*/}
+        <Box width={400} >
+          <Paper elevation={6}>
+            <Stack
+              direction="column"
+              justifyContent="flex-start"
+              alignItems="flex-start"
+              spacing={6}
+              paddingBottom={3}
+              paddingTop={3}
+              paddingLeft={4}
+            >
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Estado:</Typography>
+                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.status }</Typography>
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Prioridad</Typography>
+                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>Alta/Media/Baja</Typography>
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Creado el:</Typography>
+                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ format(new Date(ticket.createdAt), 'dd/MM/yyyy HH:mm') }</Typography>
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Finalizado el:</Typography>
+                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.finishAt ? format(new Date(ticket.finishAt), 'dd/MM/yyyy HH:mm') : '-' }</Typography>
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Reportado por:</Typography>
+                <Box display='flex' flexDirection='row' alignItems={'center'} gap={1}  paddingLeft={sideSeparation}>
+                  <Avatar {...stringAvatar(ticket.user,50)}  />
+                  <Typography variant='h1' component='h1'>{ ticket.user }</Typography>
+                </Box>
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Assignado a:</Typography>
+                {ticket.assignedTo ? (<Box display='flex' flexDirection='row' alignItems={'center'} gap={1} paddingLeft={sideSeparation}>
+                  <Avatar {...stringAvatar(ticket.assignedTo,50)} />
+                  <Typography variant='h1' component='h1'>{ ticket.assignedTo }</Typography>
+                </Box>):(<Typography variant='h1' component='h1' paddingLeft={sideSeparation}>-</Typography>)}
+              </Box>
+              <Box display='flex' flexDirection='column' gap={1}>
+                <Typography variant='subtitle2' component='h2'>Equipo asociado</Typography>
+                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.equipId }</Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Box>
       </Grid>
-
     </ShopLayout>
   )
 }
 
 
-// getServerSideProps 
-// You should use getServerSideProps when:
-// - Only if you need to pre-render a page whose data must be fetched at request time
-//* No usar esto.... SSR
-// export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  
-//   const { slug = '' } = params as { slug: string };
-//   const product = await dbProducts.getProductBySlug( slug );
-
-  // if ( !product ) {
-  //   return {
-  //     redirect: {
-  //       destination: '/',
-  //       permanent: false
-  //     }
-  //   }
-  // }
-
-//   return {
-//     props: {
-//       product
-//     }
-//   }
-// }
-
-
-// getStaticPaths....
-// You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
   
   const productTicketIds = await dbTickets.getAllTicketTicketId();
 
-  
   return {
     paths: productTicketIds.map( ({ ticketId }) => ({
       params: {
@@ -139,15 +245,13 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
   }
 }
 
-// You should use getStaticProps when:
-//- The data required to render the page is available at build time ahead of a user’s request.
-//- The data comes from a headless CMS.
-//- The data can be publicly cached (not user-specific).
-//- The page must be pre-rendered (for SEO) and be very fast — getStaticProps generates HTML and JSON files, both of which can be cached by a CDN for performance.
+
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   
   const { ticketId = '' } = params as { ticketId: string };
+  
   const ticket = await dbTickets.getTicketByTicketId( ticketId );
+
 
   if ( !ticket ) {
     return {

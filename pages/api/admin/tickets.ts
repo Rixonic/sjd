@@ -20,6 +20,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Data>)
             return getTickets( req, res );
             
         case 'PUT':
+            
             return updateTickets( req, res );
 
         case 'POST':
@@ -56,7 +57,7 @@ const getTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
 
 }
 
-
+/*
 const updateTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
     
     const { _id = '', images = [] } = req.body as ITicket;
@@ -64,11 +65,7 @@ const updateTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => 
     if ( !isValidObjectId( _id ) ) {
         return res.status(400).json({ message: 'El id del producto no es válido' });
     }
-    /*
-    if ( images.length < 2 ) {
-        return res.status(400).json({ message: 'Es necesario al menos 2 imágenes' });
-    }
-    */
+
 
     // TODO: posiblemente tendremos un localhost:3000/products/asdasd.jpg
 
@@ -77,6 +74,7 @@ const updateTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => 
         
         await db.connect();
         const ticket = await Ticket.findById(_id);
+        
         if ( !ticket ) {
             await db.disconnect();
             return res.status(400).json({ message: 'No existe un producto con ese ID' });
@@ -92,7 +90,7 @@ const updateTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => 
                 await cloudinary.uploader.destroy( fileId );
             }
         });
-
+        console.log(ticket)
         await ticket.update( req.body );
         await db.disconnect();
         
@@ -106,6 +104,80 @@ const updateTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => 
     }
 
 }
+*/
+const updateTickets = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
+    const { _id = '', comments = [] } = req.body as ITicket;
+    
+    if (!isValidObjectId(_id)) {
+        return res.status(400).json({ message: 'El id del ticket no es válido' });
+    }
+
+    try {
+        await db.connect();
+        const ticket = await Ticket.findById(_id);
+
+        if (!ticket) {
+            await db.disconnect();
+            return res.status(400).json({ message: 'No existe un ticket con ese ID' });
+        }
+        //console.log(ticket.comments)
+        ticket.comments = comments; // Actualiza los comentarios en el ticket
+        console.log(ticket.comments)
+        await ticket.update( req.body );
+        //await ticket.save(); // Guarda el ticket actualizado con los nuevos comentarios
+        await db.disconnect();
+
+        return res.status(200).json(ticket);
+
+    } catch (error) {
+        console.log(error);
+        await db.disconnect();
+        return res.status(400).json({ message: 'Revisar la consola del servidor' });
+    }
+};
+/*
+
+const updateTickets = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
+    const { _id = '', comments = [] } = req.body as ITicket;
+  console.log(comments)
+    if (!isValidObjectId(_id)) {
+      return res.status(400).json({ message: 'El id del producto no es válido' });
+    }
+  
+    try {
+      await db.connect();
+      const ticket = await Ticket.findById(_id);
+      if (!ticket) {
+        await db.disconnect();
+        return res.status(400).json({ message: 'No existe un ticket con ese ID' });
+      }
+  
+      if (!ticket.comments) {
+        ticket.comments = []; // Inicializa el array de comentarios si no existe
+      }
+  
+      if (comments.length > 0) {
+        const newComment = {
+          user: 'userID', // Reemplaza por el ID de usuario real
+          comment: 'comments[0].comment',
+          createdAt: new Date(),
+        };
+        //console.log(newComment)
+        ticket.comments.push(commen);
+        //console.log(ticket)
+      }
+  
+      await ticket.save();
+      await db.disconnect();
+  
+      return res.status(200).json(ticket);
+    } catch (error) {
+      console.log(error);
+      await db.disconnect();
+      return res.status(400).json({ message: 'Revisar la consola del servidor' });
+    }
+  };
+*/
 
 const createTickets = async(req: NextApiRequest, res: NextApiResponse<Data>) => {
     

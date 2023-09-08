@@ -47,7 +47,7 @@ export const getAllTicketEquipId = async(): Promise<TicketTicketId[]>  => {
 
 export const getTicketsByEquipmentId = async (equip: string): Promise<ITicket[]> => {
     await db.connect();
-    const tickets = await Ticket.find({ associatedEquipId: equip }).lean();
+    const tickets = await Ticket.find({ equipId: equip }).lean();
     await db.disconnect();
   
     const updatedTickets = tickets.map((ticket) => {

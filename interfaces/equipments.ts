@@ -1,7 +1,7 @@
 export interface IEquipment {
     _id: string;
     equip: string;
-    equipmentId: string;
+    equipId: string;
     model: string;
     brand: string;
     sector: string;
@@ -12,6 +12,11 @@ export interface IEquipment {
     serialNumber: string;
     criticalType: ICriticalType;
     associatedEquip?:IEquipment[];
+    
+    perfomance  : Date;
+    duePerfomance: Date;
+    electricalSecurity: Date;
+    dueElectricalSecurity: Date;
     
 
     // TODO: agregar createdAt y updatedAt
@@ -26,13 +31,3 @@ export type ILocation = 'QUIROFANO'|'ENDOSCOPIA'|'HEMODINAMIA'|'ENFERMERIA'|'NEO
 
 export type ISize = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';
 
-export interface IAssociatedEquip {
-    _id: string;
-    equip: string;
-    equipmentId: string;
-    brand: string;
-    model: string;
-    quantity: number;
-    serialNumber: string;
-    
-}

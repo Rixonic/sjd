@@ -17,8 +17,8 @@ import { format } from 'date-fns';
 import { IEquipmentService  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
-import compareAsc from 'date-fns/compareAsc'
-import { isAfter, isBefore, isSameDay } from "date-fns"
+
+
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
 /*
@@ -51,14 +51,15 @@ import {
   CellContext,
 
 } from '@tanstack/react-table';
+import { TheTable } from '../components/table';
 
 const currentDate = new Date();
 console.log(currentDate)
 
 const EquipmentsPage = () =>  {  
 
-  const columns = React.useMemo<ColumnDef<IEquipmentService>[]>(
-    () => [
+  const columns :ColumnDef<IEquipmentService>[]=[
+
       {
         header: 'Identificacion',
         footer: props => props.column.id,
@@ -89,7 +90,7 @@ const EquipmentsPage = () =>  {
           {
             accessorKey: 'equip',
             header: () => 'Equipo',
-            size: 200,
+            size: 400,
             footer: props => props.column.id,
           },
           {
@@ -192,9 +193,8 @@ const EquipmentsPage = () =>  {
           
         ],
       },
-    ],
-    []
-  )
+    ]
+  
 
   const [data, setData] = useState([]);
 
@@ -271,107 +271,7 @@ const EquipmentsPage = () =>  {
         subTitle={'Listado de equipamiento'}
         icon={ <CategoryOutlined /> }
     >
-
-    <div className="p-2">
-      <div className="h-2" />
-      <table>
-        <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header => {
-                return (
-                  <th key={header.id} {...{
-                    key: header.id,
-                    colSpan: header.colSpan,
-                    style: {
-                      width: header.getSize(),
-                    },
-                  }}>
-                    {header.isPlaceholder ? null : (
-                      <Box>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getCanFilter() ? (
-                          <Box>
-                            <Filter column={header.column} table={table} />
-                          </Box>
-                        ) : null}
-                      </Box>
-                    )}
-                  </th>
-                )
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => {
-            return (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => {
-                  return (
-                    <td key={cell.id} 
-                    className={(cell.column.columnDef.meta as any)?.className}
-                    align ={(cell.column.columnDef.meta as any)?.align}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                        
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      
-      <Stack
-  direction="row"
-  justifyContent="space-between"
-  alignItems="center"
-  spacing={2}
->
-      <Stack direction="row" >
-        <IconButton
-          onClick={() => {table.setPageIndex(0);}}
-          disabled={!table.getCanPreviousPage()}
-        >
-          <FirstPageIcon />
-        </IconButton>
-          <IconButton
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          <NavigateBeforeIcon />
-        </IconButton>
-          <IconButton
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          <NavigateNextIcon />
-        </IconButton>
-        <IconButton
-          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-          disabled={!table.getCanNextPage()}
-        >
-          <LastPageIcon />
-        </IconButton>
-        </Stack>
-          <span className="flex items-center gap-1">
-            <div>Page:<strong>
-              {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
-            </strong></div>
-          </span>       
-        </Stack>
-        <Stack  alignItems="center"> <Typography >Los mantenimientos y chequeos tienen una tolerancia de 60 dias</Typography></Stack>
-        
-    </div>
+<TheTable data={data} columns={columns}/>
         
     </AdminLayout>
 

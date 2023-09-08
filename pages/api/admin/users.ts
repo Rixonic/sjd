@@ -23,7 +23,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Data>)
 
     }
 
-
 }
 
 const getUsers = async(req: NextApiRequest, res: NextApiResponse<Data>) =>  {
@@ -33,8 +32,6 @@ const getUsers = async(req: NextApiRequest, res: NextApiResponse<Data>) =>  {
     await db.disconnect();
 
     return res.status(200).json( users );
-
-
 }
 
 
@@ -67,4 +64,3 @@ const updateUser = async(req: NextApiRequest, res: NextApiResponse<Data>) =>  {
     return res.status(200).json({ message: 'Usuario actualizado' });
      
 }
-

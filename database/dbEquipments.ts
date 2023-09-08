@@ -20,8 +20,46 @@ export const getEquipmentByEquip = async( equip: string ): Promise<IEquipment | 
     return JSON.parse( JSON.stringify( equipment ) );
 }
 
+export const getEquipmentByEquipId = async( equipId: string ): Promise<IEquipment | null> => {
+
+    await db.connect();
+    const equipment = await Equipment.findOne({ equipId }).lean();
+    await db.disconnect();
+
+    if ( !equipment ) {
+        return null;
+    }
+
+    equipment.images = equipment.images.map( image => {
+        return image.includes('http') ? image : `${ process.env.HOST_NAME}equipments/${ image }`
+    });
+
+    return JSON.parse( JSON.stringify( equipment ) );
+}
+
+export const getEquipmentBySubEquipId = async( equipId: string ): Promise<IEquipment | null> => {
+
+    await db.connect();
+    const equipment = await Equipment.findOne({ 'associatedEquip.equipId': equipId }).lean();
+    await db.disconnect();
+
+    if ( !equipment ) {
+        return null;
+    }
+
+    equipment.images = equipment.images.map( image => {
+        return image.includes('http') ? image : `${ process.env.HOST_NAME}equipments/${ image }`
+    });
+
+    return JSON.parse( JSON.stringify( equipment.associatedEquip ) );
+}
+
+
 interface EquipmentEquip {
     equip: string;
+}
+interface EquipmentEquipId {
+    equipId: string;
 }
 
 export const getAllEquipmentEquip = async(): Promise<EquipmentEquip[]>  => {
@@ -33,6 +71,17 @@ export const getAllEquipmentEquip = async(): Promise<EquipmentEquip[]>  => {
 
     return equips;
 }
+
+export const getAllEquipmentEquipId = async(): Promise<EquipmentEquipId[]>  => {
+
+
+    await db.connect();
+    const equips = await Equipment.find().select('equipId -_id').lean();
+    await db.disconnect();
+
+    return equips;
+}
+
 
 export const getEquipmentsByTerm = async ( term:string): Promise<IEquipment[]> => {
     

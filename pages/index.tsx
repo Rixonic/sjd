@@ -3,7 +3,7 @@ import React, {useContext, HTMLAttributes, HTMLProps , useState, useEffect} from
 import { Box, Typography, Stack, Grid} from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { AdminLayout } from '../components/layouts'
+import { ShopLayout } from '../components/layouts'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -21,9 +21,9 @@ const EquipmentsPage = () =>  {
 
   return (
 
-    <AdminLayout 
-        title={''} 
-        subTitle={''}
+    <ShopLayout 
+        title={'Inicio'} 
+        pageDescription={''}
 
     >
       <Stack    direction="row"
@@ -104,7 +104,7 @@ const EquipmentsPage = () =>  {
         
         
         
-    </AdminLayout>
+    </ShopLayout>
 
 
   )

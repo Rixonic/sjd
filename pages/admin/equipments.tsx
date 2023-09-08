@@ -19,6 +19,8 @@ import axios from 'axios';
 
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
+import { TheTable } from '../../components/table';
+
 import {
   Column,
   Table,
@@ -43,7 +45,7 @@ const EquipmentsPage = () =>  {
         footer: props => props.column.id,
         columns: [
           {
-            accessorKey: 'equip',
+            accessorKey: 'equipId',
             header: ({ table }) => (
               <>
                 <IconButton
@@ -93,7 +95,7 @@ const EquipmentsPage = () =>  {
         footer: props => props.column.id,
         columns: [
           {
-            accessorKey: 'equipmentId',
+            accessorKey: 'equip',
             header: () => 'Equipo',
             footer: props => props.column.id,
           },
@@ -126,8 +128,8 @@ const EquipmentsPage = () =>  {
             id: '_id',
             cell: ({ row }) => (
               <Stack direction="row">
-                <IconButton href={`/admin/equipments/${row.original.equip}`}><EditIcon/></IconButton>
-                <IconButton href={`/equipment/${row.original.equip}`}><VisibilityIcon/></IconButton>
+                <IconButton href={`/admin/equipments/${row.original.equipId}`}><EditIcon/></IconButton>
+                <IconButton href={`/equipment/${row.original.equipId}`}><VisibilityIcon/></IconButton>
               </Stack>
             ),
             footer: props => props.column.id,
@@ -192,6 +194,7 @@ const EquipmentsPage = () =>  {
         subTitle={'Listado de equipamiento'}
         icon={ <CategoryOutlined /> }
     >
+
 
     <div className="p-2">
       <div className="h-2" />

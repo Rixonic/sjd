@@ -21,12 +21,11 @@ const ticketSchema = new Schema({
     assignedTo: { type: String, default: '' },  
    
     equipId: { type: String },
-    comment: [{
-        _id : { type: String },
-        user  : { type: String},
-        commentary   : { type: String},
-        dateTime: { type: String},
-    }],
+    comments: [{
+        user: { type: String },
+        comment: { type: String }, // Cambia el tipo del campo a String
+        createdAt: { type: Date, default: Date.now }
+      }],
     diagnostic: {
         _id : { type: String },
         user  : { type: String },
@@ -35,6 +34,7 @@ const ticketSchema = new Schema({
     isTechnician: { type: Boolean },
     isSupervisor: { type: Boolean },
     isService: { type: Boolean },
+    finishAt: {type: Date},
 },{
     timestamps: true
 });
