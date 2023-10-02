@@ -8,18 +8,23 @@ const ticketSchema = new Schema({
     images: [{ type: String }],
     status: {
         type: String,
+        default: 'Solicitud creada'
+    },
+    priority: {
+        type: String,
         enum: {
-            values: ['Finalizado','En progreso'],
-            message: '{VALUE} no es un estado valido'
-        },
-        default: 'En progreso'
+            values: ['ALTA','MEDIA','BAJA'],
+            message: '{VALUE} no es un locacion válida'
+        }
     },
     summary: { type: String, default: '' }, 
-       
+    estimatedFinish:  { type: Date },
     detail: { type: String, default: '' },    
     user: { type: String, default: '' },    
     assignedTo: { type: String, default: '' },  
-   
+    finishBy: { type: String },  
+    type: { type: String},  
+    sector: { type: String },  
     equipId: { type: String },
     comments: [{
         user: { type: String },
@@ -27,9 +32,8 @@ const ticketSchema = new Schema({
         createdAt: { type: Date, default: Date.now }
       }],
     diagnostic: {
-        _id : { type: String },
-        user  : { type: String },
-        observation   : { type: String },
+        user  : { type: String , default: '' },
+        observation   : { type: String, default: ''  },
     },
     isTechnician: { type: Boolean },
     isSupervisor: { type: Boolean },

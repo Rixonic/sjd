@@ -18,7 +18,7 @@ import { IEquipmentService  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
 
-
+import {access}  from '../utils/access';
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
 /*
@@ -199,19 +199,24 @@ const EquipmentsPage = () =>  {
   const [data, setData] = useState([]);
 
   const [error, setError] = useState(null);
+  
+  
+  
 
+  const [filteredEquips, setFilteredEquips] = useState<IEquipmentService[]>([]);
   const { user } = useContext(AuthContext);
+  const userIndex = access.findIndex((data) => data.user === user?.email);
+  const userLocation = userIndex !== -1 ? access[userIndex].locations : "";
   const userSector = user?.email.toUpperCase()
   console.log();
   useEffect(() => {
+   
     const fetchData = async () => {
       try {
         const response = await axios.get('/api/admin/equipmentsService', {
-          params: {
-            service: user.role === 'admin'? null: user.email.toUpperCase(), 
-          },
-        });
 
+        });
+        
         const formattedData = response.data.map(equipment => {
 
           const parsedEquipment = {
@@ -221,18 +226,23 @@ const EquipmentsPage = () =>  {
             electricalSecurity: equipment.electricalSecurity ? format(new Date(equipment.electricalSecurity), 'MM/yyyy') : null,
             dueElectricalSecurity: equipment.dueElectricalSecurity ? new Date(equipment.dueElectricalSecurity) : null,
           };
-        
+          //
+          
+          
           return parsedEquipment;
         });
-
+        
+        const filtered = formattedData.filter((equip) => access[userIndex].locations.includes(equip.service)).sort((a, b) => a.ownId - b.ownId);
+        console.log(filtered)
+        setFilteredEquips(filtered);
       setData(formattedData); 
       } catch (err) {
         setError(err); 
       }
     };
-    if (userSector){
+  
     fetchData();
-  }
+  
   }, [userSector]);
 
   
@@ -271,7 +281,7 @@ const EquipmentsPage = () =>  {
         subTitle={'Listado de equipamiento'}
         icon={ <CategoryOutlined /> }
     >
-<TheTable data={data} columns={columns}/>
+<TheTable data={filteredEquips} columns={columns}/>
         
     </AdminLayout>
 

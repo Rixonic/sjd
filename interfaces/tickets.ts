@@ -10,6 +10,9 @@ export interface ITicket {
     user: string;
     assignedTo: string;
     equipId: string;
+    type: string;
+    sector: string;
+    priority: string;
     comments: {
         user : string;
         comment: string;
@@ -19,6 +22,8 @@ export interface ITicket {
     diagnostic: IDiagonstic;
     createdAt?: string;
     finishAt: Date;
+    finishBy: string;
+    estimatedFinish: Date;
     isTechnician: boolean;
     isSupervisor: boolean;
     isService: boolean;

@@ -1,167 +1,537 @@
-import { useState, useContext } from 'react';
-import { NextPage, GetServerSideProps, GetStaticPaths, GetStaticProps } from 'next';
-import { useRouter } from 'next/router';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import { Box, Button,Stack, Chip, Grid, Typography, Divider, Container, TextField} from '@mui/material';
-import { format } from 'date-fns';
-import { ShopLayout } from '../../components/layouts';
-import { ItemSlideshow } from '../../components/item';
-import { ItemComment } from '../../components/item';
-import { ItemCounter } from '../../components/ui/ItemCounter';
-import Avatar from '@mui/material/Avatar';
-import { dbTickets, dbUsers } from '../../database';
-import { ITicket, IUser } from '../../interfaces';
-import Paper from '@mui/material/Paper';
-import CardActions from '@mui/material/CardActions';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-
-const sideSeparation = 5;
+import { useState, useContext } from "react";
+import {
+  NextPage,
+  GetServerSideProps,
+  GetStaticPaths,
+  GetStaticProps,
+} from "next";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import MenuItem from "@mui/material/MenuItem";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormControl from "@mui/material/FormControl";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import {
+  Box,
+  Button,
+  Stack,
+  Chip,
+  Grid,
+  Typography,
+  Divider,
+  Container,
+  TextField,
+} from "@mui/material";
+import { format } from "date-fns";
+import { ShopLayout } from "../../components/layouts";
+import { ItemSlideshow } from "../../components/item";
+import Avatar from "@mui/material/Avatar";
+import { dbTickets, dbUsers } from "../../database";
+import { ITicket, IUser } from "../../interfaces";
+import Paper from "@mui/material/Paper";
+import CardActions from "@mui/material/CardActions";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import CardContent from "@mui/material/CardContent";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+const sideSeparation = 3;
 const mainSeparation = 2;
 
-import { UiContext, AuthContext } from '../../context';
-import { Margin } from '@mui/icons-material';
+import { UiContext, AuthContext } from "../../context";
+
 interface Props {
-  ticket: ITicket,
+  ticket: ITicket;
 }
 
-const TicketPage:NextPage<Props> = ({ ticket }) => {
-  const { user, isLoggedIn, logout } = useContext(  AuthContext );
-  console.log(user)
+const steps = [{
+  type:'REPARACION',
+  step:[
+    {
+      status: "Solicitud creada",
+      label: "Solicitud realizada",
+      description: ` `,
+    },
+    {
+      status: "Asignado",
+      label: "Asignado",
+      description: "",
+    },
+    {
+      status: "En revision",
+      label: "En revision",
+      description: "",
+    },
+    {
+      status: "Diagnosticado",
+      label: "Diagnosticado",
+      description: "",
+    },
+    {
+      status: "Reparado",
+      label: "Reparado",
+      description: ``,
+    },
+  ]
+},
+{
+  type:'TRASLADO',
+  step:[
+    {
+      status: "Solicitud creada",
+      label: "Solicitud realizada",
+      description: ` `,
+    },
+    {
+      status: "Traslado en curso",
+      label: "Pendiente de asignacion",
+      description: "",
+    },
+    {
+      status: "Finalizado",
+      label: "Solicitud Finalizada",
+      description: ``,
+    },
+  ]
+}
+  
+];
 
+const status = ["Solicitud creada", "Asignado", "En progreso"];
+const person = [
+  "Pablo Goldemberg",
+  "Pablo Vilchez",
+  "Franco Lagraña",
+  "Franco Cejas",
+  "Alejandra Lazcarro",
+  "Jonathan Barragan",
+];
+
+const TicketPage: NextPage<Props> = ({ ticket }) => {
+  const ticketType = steps.findIndex((step) => step.type === ticket.type);
+  const [updatedStatus, setUpdatedStatus] = useState(ticket.status);
+  const [updatedPriority, setUpdatedPriority] = useState(ticket.priority);
+  const [updatedAssigned, setUpdatedAssigned] = useState(ticket.assignedTo);
+  const [newDiagnostic, setNewDiagnostic] = useState( ticket.diagnostic.observation);
+  const { user, isLoggedIn, logout } = useContext(AuthContext);
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    ticket.estimatedFinish ? new Date(ticket.estimatedFinish) : null
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const [comments, setComments] = useState(ticket.comments || []);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
 
-const addComment = async () => {
-  if (newComment.trim() === '') {
-    return;
-  }
-  
-  try {
-    setIsSaving(true);
-    const response = await fetch('/api/admin/tickets', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        _id: ticket._id, // Assuming ticket._id is the ID of the current ticket
-        comments: [
-          {
-            user: user.name, // Replace with actual user ID
-            comment: newComment,
-            createdAt: new Date(),
-          },
-          ...comments, // Keep the existing comments
-        ],
-      }),
-    });
+  const handleDateChange = async (newDate: Date | null) => {
+    try {
+      setIsSaving(true);
 
-    if (response.ok) {
-      // Comment successfully added to the server
-      const updatedTicket = await response.json();
-      setComments(updatedTicket.comments);
-      setNewComment('');
-    } else {
-      // Handle error
-      console.error('Error adding comment');
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          estimatedFinish: newDate, // Actualiza la fecha estimada en la base de datos
+        }),
+      });
+
+      if (response.ok) {
+        const updatedTicket = await response.json();
+        setSelectedDate(newDate);
+      } else {
+        console.error("Error al actualizar la fecha");
+      }
+    } catch (error) {
+      console.error("Error al actualizar la fecha", error);
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error('Error adding comment', error);
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
+console.log(steps)
+  const handleStatusChange = async (event: SelectChangeEvent) => {
+    const newStatus = event.target.value;
+    setUpdatedStatus(newStatus);
+
+    // Realiza una solicitud PUT al servidor para actualizar el estado del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        // Actualización exitosa
+      } else {
+        console.error("Error al actualizar el estado");
+      }
+    } catch (error) {
+      console.error("Error al actualizar el estado", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAssignedChange = async (event: SelectChangeEvent) => {
+    const newAssigned = event.target.value;
+    setUpdatedAssigned(newAssigned);
+
+    // Realiza una solicitud PUT al servidor para actualizar el estado del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          assignedTo: newAssigned,
+        }),
+      });
+
+      if (response.ok) {
+        // Actualización exitosa
+      } else {
+        console.error("Error al actualizar el estado");
+      }
+    } catch (error) {
+      console.error("Error al actualizar el estado", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
+
+  const handlePriorityChange = async (event: SelectChangeEvent) => {
+    const newPriority = event.target.value;
+    setUpdatedPriority(newPriority);
+
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          priority: newPriority,
+        }),
+      });
+
+      if (response.ok) {
+        // Actualización exitosa
+      } else {
+        console.error("Error al actualizar la prioridad");
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const finishTicket = async () => {
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          finishBy: user.name,
+          finishAt: new Date(),
+          status: "Finalizado",
+        }),
+      });
+
+      if (response.ok) {
+        // Actualización exitosa
+      } else {
+        console.error("Error al actualizar la prioridad");
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+      window.location.reload();
+    }
+  };
+
+  const addDiagnostic = async () => {
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          diagnostic:{
+            user : user.name,
+            observation : newDiagnostic,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        // Actualización exitosa
+      } else {
+        console.error("Error al actualizar la prioridad");
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (newComment.trim() === "") {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id, // Assuming ticket._id is the ID of the current ticket
+          comments: [
+            {
+              user: user.name, // Replace with actual user ID
+              comment: newComment,
+              createdAt: new Date(),
+            },
+            ...comments, // Keep the existing comments
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        // Comment successfully added to the server
+        const updatedTicket = await response.json();
+        setComments(updatedTicket.comments);
+        setNewComment("");
+      } else {
+        // Handle error
+        console.error("Error adding comment");
+      }
+    } catch (error) {
+      console.error("Error adding comment", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   function stringToColor(string: string) {
     let hash = 0;
     let i;
-  
-    /* eslint-disable no-bitwise */
+
     for (i = 0; i < string.length; i += 1) {
       hash = string.charCodeAt(i) + ((hash << 5) - hash);
     }
-  
-    let color = '#';
-  
+
+    let color = "#";
+
     for (i = 0; i < 3; i += 1) {
       const value = (hash >> (i * 8)) & 0xff;
       color += `00${value.toString(16)}`.slice(-2);
     }
-    /* eslint-enable no-bitwise */
-  
+
     return color;
   }
 
-  function stringAvatar(name: string, size:number) {
+  function stringAvatar(name: string, size: number) {
     return {
       sx: {
         bgcolor: stringToColor(name),
-        width: size, 
+        width: size,
         height: size,
-        fontSize: size/2,
+        fontSize: size / 2,
       },
-      children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+      children: name
+        .split(" ")
+        .map((word) => word[0])
+        .join(""),
     };
   }
 
+  const activeStep =
+    1 + steps.findIndex((step) => step[ticketType]?.status === ticket.status);
+
   return (
-    <ShopLayout title={ ticket.ticketId } pageDescription={ ticket.summary }>
-      <Grid container >
-        <Grid item xs={ 12 } sm={ 8 }>
-          <Box display='flex' flexDirection='column' gap={1}>
+    <ShopLayout title={ticket.ticketId} pageDescription={ticket.summary}>
+      <Box display="flex" flexDirection="row" gap={2} justifyContent="center"
+  alignItems="start">
+        <Grid item xs={12} sm={8} gap={2}>
+          <Box display="flex" flexDirection="column" gap={2}>
             {/* titulos */}
-            <Box display='flex' flexDirection='row' gap={1}>
-              <Typography variant='subtitle1' component='h2'>{ `Ticket Nro:` }</Typography>
-              <Typography variant='h1' component='h1' >{ ticket.ticketId }</Typography>
+
+            <Box display="flex" flexDirection="row" gap={1}>
+              <Typography
+                variant="subtitle1"
+                component="h2"
+              >{`Ticket Nro:`}</Typography>
+              <Typography variant="h1" component="h1">
+                {ticket.ticketId}
+              </Typography>
+            </Box>
+            <Box display="flex" flexDirection="row" gap={2}>
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle2">Problema:</Typography>
+              <TextField
+          id="outlined-multiline-static"
+          disabled
+          multiline
+          rows={3}
+          value={ticket.summary}
+        />
+
+            </Box>
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle2">Descripción:</Typography>
+              <TextField
+          id="outlined-multiline-static"
+          disabled
+          multiline
+          rows={3}
+          value={ticket.detail}
+        />
+            </Box>
+            <Box sx={{ mt: 3 }} display="flex" flexDirection="column" >
+              <Typography variant="subtitle2">Diagnostico:</Typography>
+              <TextField
+          id="outlined-multiline-static"
+          disabled = {user?.role != 'admin' || ticket.diagnostic.observation==null}
+          multiline
+          rows={3}
+          value={newDiagnostic}
+          onChange={(e) => setNewDiagnostic(e.target.value)}
+        />
+        { user?.role == 'admin' && !ticket.diagnostic.observation  ? (<Button onClick={addDiagnostic}>Agregar Diagnostico</Button>): null}
+        
+            </Box>
+            
             </Box>
             {/* Descripción */}
-            <Box sx={{ mt:3 }}>
-              <Typography variant='subtitle2'>Problema:</Typography>
-              <Typography variant='body2' paddingLeft={mainSeparation}>{ ticket.summary }</Typography>
-            </Box>
-        
-            <Box sx={{ mt:3 }}>
-              <Typography variant='subtitle2'>Descripción:</Typography>
-              <Typography variant='body1' paddingLeft={mainSeparation}>{ ticket.detail }</Typography>
+            
+
+            
+            <Typography variant="subtitle2">Seguimiento:</Typography>
+            <Box display="flex" flexDirection="row" gap={2}>
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {steps[ticketType].step.map((step) => (
+                  <Step key={step.label}>
+                    <StepLabel>{step.label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              {!ticket.finishBy && (
+                <Box display="flex" flexDirection="column" gap={1}>
+                  <Typography variant="subtitle2" component="h2">
+                    Fecha estimada de finalizacion:
+                  </Typography>
+                  {user?.role == "admin" && !ticket.finishBy ? (
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        format="dd/MM/yyyy"
+                        value={new Date(ticket?.estimatedFinish)}
+                        onChange={handleDateChange}
+                      />
+                    </LocalizationProvider>
+                  ) : (
+                    <Typography variant="h1" component="h1">
+                      {ticket.estimatedFinish &&
+                        format(new Date(ticket.estimatedFinish), "dd/MM/yyyy")}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Box>
             {ticket.images && ticket.images.length > 0 ? (
               <ItemSlideshow images={ticket.images} />
             ) : (
-              <Typography variant='subtitle2' component='h2'>No hay imagenes asociadas</Typography>
+              <Typography variant="subtitle2" component="h2">
+                No hay imagenes asociadas
+              </Typography>
             )}
           </Box>
           {/* Comentarios */}
           <Box sx={{ mt: 3 }}>
             <Grid item xs={12} sm={12}>
-              <Box display='flex' flexDirection='column' gap={2}>
-                <Typography variant='h1' >Comentarios</Typography>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <Typography variant="h1">Comentarios</Typography>
+                <Paper style={{maxHeight: 200, overflow: 'auto'}} elevation={0} >
                 <Stack
                   direction="column"
                   justifyContent="flex-start"
                   alignItems="flex-start"
-                  spacing={1}
+                  spacing={2}
+              
+                  overflow= "hidden"
+                 
                 >
                   {comments.map((comment) => (
-                    <Card sx={{ maxWidth: 545 , width: 400 } }  key={format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm:ss')} >
+                    <Card
+                      sx={{ maxWidth: 545, width: 400, height:120 }}
+                      key={format(
+                        new Date(comment.createdAt),
+                        "dd/MM/yyyy HH:mm:ss"
+                      )}
+                    >
                       <CardHeader
-                        avatar={<Avatar {...stringAvatar(comment.user,35)} />}
+                        avatar={<Avatar {...stringAvatar(comment.user, 35)} />}
                         title={comment.user}
-                        subheader={ format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm') }
+                        subheader={format(
+                          new Date(comment.createdAt),
+                          "dd/MM/yyyy HH:mm"
+                        )}
                       />
                       <Divider variant="middle" />
                       <CardActions>
-                        <Typography variant="body2" color="text.secondary">{comment.comment}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {comment.comment}
+                        </Typography>
                       </CardActions>
                     </Card>
                   ))}
                 </Stack>
+                </Paper>
                 <Divider variant="middle" />
-                <Box display='flex' flexDirection='row' alignItems={'center'} gap={2}>
+                <Box
+                  display="flex"
+                  flexDirection="row"
+                  alignItems={"center"}
+                  gap={2}
+                >
                   <TextField
                     label="Agregar comentario"
                     multiline
@@ -173,11 +543,11 @@ const addComment = async () => {
                   <Button onClick={addComment}>Agregar Comentario</Button>
                 </Box>
               </Box>
-            </Grid> 
+            </Grid>
           </Box>
         </Grid>
         {/*Sector lateral*/}
-        <Box width={400} >
+        <Box width={400} display="flex" flexDirection="column" gap={5}>
           <Paper elevation={6}>
             <Stack
               direction="column"
@@ -188,88 +558,207 @@ const addComment = async () => {
               paddingTop={3}
               paddingLeft={4}
             >
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Estado:</Typography>
-                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.status }</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Estado:
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedStatus}
+                    defaultValue={ticket.status}
+                    onChange={handleStatusChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    {status.map((state) => (
+                      <MenuItem key={state} value={state}>
+                        {state}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    paddingLeft={sideSeparation}
+                  >
+                    {ticket.status}
+                  </Typography>
+                )}
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Prioridad</Typography>
-                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>Alta/Media/Baja</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Prioridad
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedPriority}
+                    defaultValue={ticket.priority}
+                    onChange={handlePriorityChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    <MenuItem value={"ALTA"}>Alta</MenuItem>
+                    <MenuItem value={"MEDIA"}>Media</MenuItem>
+                    <MenuItem value={"BAJA"}>Baja</MenuItem>
+                  </Select>
+                ) : (
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    paddingLeft={sideSeparation}
+                  >
+                    {ticket?.priority}
+                  </Typography>
+                )}
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Creado el:</Typography>
-                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ format(new Date(ticket.createdAt), 'dd/MM/yyyy HH:mm') }</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Creado el:
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {format(new Date(ticket.createdAt), "dd/MM/yyyy HH:mm")}
+                </Typography>
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Finalizado el:</Typography>
-                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.finishAt ? format(new Date(ticket.finishAt), 'dd/MM/yyyy HH:mm') : '-' }</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Finalizado el:
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {ticket.finishAt
+                    ? format(new Date(ticket.finishAt), "dd/MM/yyyy HH:mm")
+                    : "-"}
+                </Typography>
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Reportado por:</Typography>
-                <Box display='flex' flexDirection='row' alignItems={'center'} gap={1}  paddingLeft={sideSeparation}>
-                  <Avatar {...stringAvatar(ticket.user,50)}  />
-                  <Typography variant='h1' component='h1'>{ ticket.user }</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Reportado por:
+                </Typography>
+                <Box
+                  display="flex"
+                  flexDirection="row"
+                  alignItems={"center"}
+                  gap={1}
+                  paddingLeft={sideSeparation}
+                >
+                  <Avatar {...stringAvatar(ticket.user, 50)} />
+                  <Typography variant="h1" component="h1">
+                    {ticket.user}
+                  </Typography>
                 </Box>
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Assignado a:</Typography>
-                {ticket.assignedTo ? (<Box display='flex' flexDirection='row' alignItems={'center'} gap={1} paddingLeft={sideSeparation}>
-                  <Avatar {...stringAvatar(ticket.assignedTo,50)} />
-                  <Typography variant='h1' component='h1'>{ ticket.assignedTo }</Typography>
-                </Box>):(<Typography variant='h1' component='h1' paddingLeft={sideSeparation}>-</Typography>)}
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Assignado a:
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedAssigned}
+                    defaultValue={updatedAssigned}
+                    onChange={handleAssignedChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    {person.map((person) => (
+                      <MenuItem key={person} value={person}>
+                        {person}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <>
+                    {ticket.assignedTo ? (
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        alignItems={"center"}
+                        gap={1}
+                        paddingLeft={sideSeparation}
+                      >
+                        <Avatar {...stringAvatar(ticket.assignedTo, 50)} />
+                        <Typography variant="h1" component="h1">
+                          {ticket.assignedTo}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography
+                        variant="h1"
+                        component="h1"
+                        paddingLeft={sideSeparation}
+                      >
+                        -
+                      </Typography>
+                    )}
+                  </>
+                )}
               </Box>
-              <Box display='flex' flexDirection='column' gap={1}>
-                <Typography variant='subtitle2' component='h2'>Equipo asociado</Typography>
-                <Typography variant='h1' component='h1' paddingLeft={sideSeparation}>{ ticket.equipId }</Typography>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Equipo asociado
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {ticket.equipId}
+                </Typography>
               </Box>
             </Stack>
           </Paper>
+          {user?.role === "admin" && !ticket.finishBy && (
+            <Button
+              variant="contained"
+              sx={{ width: "auto", padding: 1, margin: 2 }}
+              onClick={finishTicket}
+            >
+              Finalizar ticket
+            </Button>
+          )}
         </Box>
-      </Grid>
+      </Box>
     </ShopLayout>
-  )
-}
-
+  );
+};
 
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
-  
   const productTicketIds = await dbTickets.getAllTicketTicketId();
 
   return {
-    paths: productTicketIds.map( ({ ticketId }) => ({
+    paths: productTicketIds.map(({ ticketId }) => ({
       params: {
-        ticketId
-      }
+        ticketId,
+      },
     })),
-    fallback: 'blocking'
-  }
-}
-
+    fallback: "blocking",
+  };
+};
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  
-  const { ticketId = '' } = params as { ticketId: string };
-  
-  const ticket = await dbTickets.getTicketByTicketId( ticketId );
+  const { ticketId = "" } = params as { ticketId: string };
 
+  const ticket = await dbTickets.getTicketByTicketId(ticketId);
 
-  if ( !ticket ) {
+  if (!ticket) {
     return {
       redirect: {
-        destination: '/',
-        permanent: false
-      }
-    }
+        destination: "/",
+        permanent: false,
+      },
+    };
   }
 
   return {
     props: {
-      ticket
+      ticket,
     },
-    revalidate: 60 * 60 * 24
-  }
-}
+    revalidate: 60 * 60 * 24,
+  };
+};
 
-
-
-export default TicketPage
+export default TicketPage;

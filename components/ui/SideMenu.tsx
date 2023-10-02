@@ -135,7 +135,7 @@ export const SideMenu = () => {
 
                             <ListItem 
                                 button
-                                onClick={ () => navigateTo('/admin/equipments') }>
+                                onClick={ () => navigateTo('/equipamiento') }>
                                 <ListItemIcon>
                                     <CategoryOutlined/>
                                 </ListItemIcon>
@@ -153,7 +153,7 @@ export const SideMenu = () => {
 
                             <ListItem 
                                 button
-                                onClick={ () => navigateTo('/admin/tickets') }>
+                                onClick={ () => navigateTo('/tickets') }>
                                 <ListItemIcon>
                                     <ConfirmationNumberOutlined/>
                                 </ListItemIcon>
@@ -170,21 +170,24 @@ export const SideMenu = () => {
                             </ListItem>   
 
 
-                            <Divider variant="middle" />
-                            <ListSubheader>Testing</ListSubheader>
-                            <ListItem 
-                                button
-                                onClick={ () => navigateTo('/admin/sensors') }>
-                                <ListItemIcon>
-                                    <AdminPanelSettings/>
-                                </ListItemIcon>
-                                <ListItemText primary={'Usuarios'} />
-                            </ListItem>   
+                            
                         </>
 
                         
                    )
                     
+                }
+                {
+                    user?.email == 'franco.cejas' && (<><Divider variant="middle" />
+                    <ListSubheader>Testing</ListSubheader>
+                    <ListItem 
+                        button
+                        onClick={ () => navigateTo('/admin/sensors') }>
+                        <ListItemIcon>
+                            <AdminPanelSettings/>
+                        </ListItemIcon>
+                        <ListItemText primary={'Sensores'} />
+                    </ListItem>   </>)
                 }
             </List>
         </Box>
