@@ -15,6 +15,7 @@ const userSchema = new Schema({
             required: true
         }
     },
+    locations: [{type: String, default: '' }],
     sector: {
         type: String,
         enum: {

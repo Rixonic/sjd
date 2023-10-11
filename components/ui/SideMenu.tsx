@@ -153,7 +153,7 @@ export const SideMenu = () => {
 
                             <ListItem 
                                 button
-                                onClick={ () => navigateTo('/tickets') }>
+                                onClick={ () => navigateTo('/admin/tickets') }>
                                 <ListItemIcon>
                                     <ConfirmationNumberOutlined/>
                                 </ListItemIcon>

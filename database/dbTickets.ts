@@ -4,28 +4,28 @@ import { ITicket } from '../interfaces';
 
 
 
-export const getTicketByTicketId = async( ticketId: string ): Promise<ITicket | null> => {
+export const getTicketByTicketId = async (ticketId: string): Promise<ITicket | null> => {
 
     await db.connect();
     const ticket = await Ticket.findOne({ ticketId }).lean();
     await db.disconnect();
 
-    if ( !ticket ) {
+    if (!ticket) {
         return null;
     }
 
-    ticket.images = ticket.images.map( image => {
-        return image.includes('http') ? image : `${ process.env.HOST_NAME}tickets/${ image }`
+    ticket.images = ticket.images.map(image => {
+        return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`
     });
 
-    return JSON.parse( JSON.stringify( ticket ) );
+    return JSON.parse(JSON.stringify(ticket));
 }
 
 interface TicketTicketId {
     ticketId: string;
 }
 
-export const getAllTicketTicketId = async(): Promise<TicketTicketId[]>  => {
+export const getAllTicketTicketId = async (): Promise<TicketTicketId[]> => {
 
 
     await db.connect();
@@ -35,7 +35,7 @@ export const getAllTicketTicketId = async(): Promise<TicketTicketId[]>  => {
     return ticketId;
 }
 
-export const getAllTicketEquipId = async(): Promise<TicketTicketId[]>  => {
+export const getAllTicketEquipId = async (): Promise<TicketTicketId[]> => {
 
 
     await db.connect();
@@ -49,33 +49,33 @@ export const getTicketsByEquipmentId = async (equip: string): Promise<ITicket[]>
     await db.connect();
     const tickets = await Ticket.find({ equipId: equip }).lean();
     await db.disconnect();
-  
-    const updatedTickets = tickets.map((ticket) => {
-      ticket.images = ticket.images.map((image) => {
-        return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`;
-      });
-      return ticket;
-    });
-  
-    return JSON.parse(JSON.stringify(updatedTickets));
-  }
 
-export const getTicketsByTerm = async ( term:string): Promise<ITicket[]> => {
-    
+    const updatedTickets = tickets.map((ticket) => {
+        ticket.images = ticket.images.map((image) => {
+            return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`;
+        });
+        return ticket;
+    });
+
+    return JSON.parse(JSON.stringify(updatedTickets));
+}
+
+export const getTicketsByTerm = async (term: string): Promise<ITicket[]> => {
+
     term = term.toString().toLowerCase();
 
     await db.connect();
     const tickets = await Ticket.find({
         $text: { $search: term }
     })
-    .select('title images price inStock slug -_id')
-    .lean();
+        .select('title images price inStock slug -_id')
+        .lean();
 
     await db.disconnect();
 
-    const updatedTickets = tickets.map( ticket => {
-        ticket.images = ticket.images.map( image => {
-            return image.includes('http') ? image : `${ process.env.HOST_NAME}tickets/${ image }`
+    const updatedTickets = tickets.map(ticket => {
+        ticket.images = ticket.images.map(image => {
+            return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`
         });
 
         return ticket;
@@ -85,23 +85,43 @@ export const getTicketsByTerm = async ( term:string): Promise<ITicket[]> => {
     return updatedTickets;
 }
 
+export const getTicketsByLocation = async (locations: string[]): Promise<ITicket[]> => {
+    const lowerCaseLocations = locations.map(location => location.toUpperCase());
+    await db.connect();
+    const tickets = await Ticket.find({
+        location: { $in: lowerCaseLocations }
+    })
+        .lean();
+    await db.disconnect();
+    
+    const updatedTickets = tickets.map(ticket => {
+        ticket.images = ticket.images.map(image => {
+            return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`
+        });
 
-export const getAllTickets = async(): Promise<ITicket[]> => {
+        return ticket;
+    })
+
+
+    return updatedTickets;
+}
+
+export const getAllTickets = async (): Promise<ITicket[]> => {
 
     await db.connect();
     const tickets = await Ticket.find().lean();
     await db.disconnect();
 
 
-    const updatedTickets = tickets.map( ticket => {
-        ticket.images = ticket.images.map( image => {
-            return image.includes('http') ? image : `${ process.env.HOST_NAME}tickets/${ image }`
+    const updatedTickets = tickets.map(ticket => {
+        ticket.images = ticket.images.map(image => {
+            return image.includes('http') ? image : `${process.env.HOST_NAME}tickets/${image}`
         });
         return ticket;
     });
 
 
-    return JSON.parse( JSON.stringify( updatedTickets ) );
+    return JSON.parse(JSON.stringify(updatedTickets));
 }
 
 

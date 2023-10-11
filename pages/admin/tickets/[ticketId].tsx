@@ -1,542 +1,824 @@
-import { ChangeEvent, FC, useEffect, useRef, useState, useContext } from 'react';
-import { GetServerSideProps } from 'next'
-import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
-import useSWR from 'swr';
-import { useSession } from 'next-auth/react';
-
-import { Box, Button, Typography, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField } from '@mui/material';
-import { DriveFileRenameOutline, SaveOutlined, UploadOutlined } from '@mui/icons-material';
-import MenuItem from '@mui/material/MenuItem';
-import Autocomplete from '@mui/material/Autocomplete';
-
-
-import { AdminLayout } from '../../../components/layouts'
-import { ITicket } from '../../../interfaces';
-import { dbTickets } from '../../../database';
-import { tesloApi } from '../../../api';
-import { Ticket } from '../../../models';
-import { AuthContext } from '../../../context';
-
-
-const serialNumber = [
-    {serial: '13469-11-119-0290'},
-    {serial: '13669-11-119-0543'},
-    {serial: '13469-21-113-0341'},
-    {serial: '13439-11-119-0090'},
-    {serial: '13649-11-119-0423'},
-    {serial: '12369-21-113-0112'},
-]
-
-const validLocations = [
-    {
-      value: 'NEONATOLOGIA',
-      label: 'NEONATOLOGIA',
-      abreviation: 'NEO',
-    },
-    {
-      value: 'UTI',
-      label: 'UTI',
-      abreviation: 'UTI',
-    },
-    {
-      value: 'QUIROFANO',
-      label: 'QUIROFANO',
-      abreviation: 'QX',
-    },
-    {
-      value: 'ENFERMERIA',
-      label: 'ENFERMERIA',
-      abreviation: 'ENF',
-    },
-    {
-        value: 'INTERNACION',
-        label: 'INTERNACION',
-        abreviation: 'INT',
-      },
-      {
-        value: 'CONSULTORIOS',
-        label: 'CONSULTORIOS',
-        abreviation: 'CON',
-      },
-      {
-        value: 'ENDOSCOPIA',
-        label: 'ENDOSCOPIA',
-        abreviation: 'END',
-      },
-      {
-        value: 'HEMODINAMIA',
-        label: 'HEMODINAMIA',
-        abreviation: 'HEM',
-      },
-      {
-        value: 'IMAGENES',
-        label: 'IMAGENES',
-        abreviation: 'IMG',
-      },
-      {
-        value: 'INGENIERIA',
-        label: 'INGENIERIA',
-        abreviation: 'ING',
-      },
-  ];
-
-interface IComment{
-    user : string;
-    commentary: string;
-    dateTime: string;
-}
-
-interface FormData {
-    _id?       : string;
-    ticketId       : string;
-    images     : string[];
-    summary: string;
-    detail      : string;
-    user       : string;
-    assignedTo     : string;
-    location : string;
-    equipId     : string;
-   // diagnostic     : string;
-    comment      : IComment[];
-
-
-}
+import React, { useState, useContext } from "react";
+import { getSession, useSession } from "next-auth/react";
+import {
+  NextPage,
+  GetServerSideProps,
+} from "next";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import MenuItem from "@mui/material/MenuItem";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import {
+  Box,
+  Button,
+  Stack,
+  Chip,
+  Grid,
+  Typography,
+  Divider,
+  Container,
+  TextField,
+} from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { AlertProps } from "@mui/material/Alert";
+import { format } from "date-fns";
+import { ShopLayout } from "../../../components/layouts";
+import { ItemSlideshow } from "../../../components/item";
+import Avatar from "@mui/material/Avatar";
+import { dbTickets, dbUsers } from "../../../database";
+import { ITicket, IUser } from "../../../interfaces";
+import Paper from "@mui/material/Paper";
+import CardActions from "@mui/material/CardActions";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import CardContent from "@mui/material/CardContent";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+const sideSeparation = 3;
+const mainSeparation = 2;
+import { getUserData } from "../../../database/dbUsers";
+import { UiContext, AuthContext } from "../../../context";
+import { redirect } from "next/dist/server/api-utils";
 
 interface Props {
-    ticket: ITicket;
+  ticket: ITicket;
+  user: IUser;
 }
 
-const TicketAdminPage:FC<Props> = ({ ticket }) => {
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  props,
+  ref
+) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
-    const [selectedSerial, setSelectedSerial] = useState<string>('');
+const steps = [
+  {
+    type: "REPARACION",
+    step: [
+      {
+        status: "Solicitud creada",
+        label: "Solicitud realizada",
+        description: ` `,
+      },
+      {
+        status: "Asignado",
+        label: "Asignado",
+        description: "",
+      },
+      {
+        status: "En revision",
+        label: "En revision",
+        description: "",
+      },
+      {
+        status: "Diagnosticado",
+        label: "Diagnosticado",
+        description: "",
+      },
+      {
+        status: "Reparado",
+        label: "Reparado",
+        description: ``,
+      },
+    ],
+  },
+  {
+    type: "TRASLADO",
+    step: [
+      {
+        status: "Solicitud creada",
+        label: "Solicitud realizada",
+        description: ` `,
+      },
+      {
+        status: "Traslado en curso",
+        label: "Pendiente de asignacion",
+        description: "",
+      },
+      {
+        status: "Finalizado",
+        label: "Solicitud Finalizada",
+        description: ``,
+      },
+    ],
+  },
+];
 
-    const [newComment, setNewComment] = useState<IComment>({
-        user: '', // Puedes establecer el usuario automáticamente o dejarlo en blanco
-        commentary: '',
-        dateTime: '',
-      });
+const status = ["Solicitud creada", "Asignado", "En progreso"];
+const person = [
+  "Pablo Goldemberg",
+  "Pablo Vilchez",
+  "Franco Lagraña",
+  "Franco Cejas",
+  "Alejandra Lazcarro",
+  "Jonathan Barragan",
+];
 
-    const router = useRouter();
-    const { data: session } = useSession();
+const TicketPage: NextPage<Props> = ({ ticket, user }) => {
+  const ticketType = steps.findIndex((step) => step.type === ticket.type);
+  const [updatedStatus, setUpdatedStatus] = useState(ticket.status);
+  const [updatedPriority, setUpdatedPriority] = useState(ticket.priority);
+  const [updatedAssigned, setUpdatedAssigned] = useState(ticket.assignedTo);
+  const [newDiagnostic, setNewDiagnostic] = useState(
+    ticket.diagnostic.observation
+  );
 
-    const { user, isLoggedIn, logout } = useContext(AuthContext);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    ticket.estimatedFinish ? new Date(ticket.estimatedFinish) : null
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
-    const { data, error } = useSWR<ITicket[]>('/api/admin/tickets');  
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [ newTagValue, setNewTagValue ] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
+  const [comments, setComments] = useState(ticket.comments || []);
+  const [newComment, setNewComment] = useState("");
 
-    const incrementalId = data?.length;
-    const userName = user?.name;
+  const [openSuccess, setOpenSuccess] = React.useState(false);
+  const [openDanger, setOpenDanger] = React.useState(false);
 
-    const { register, handleSubmit, formState:{ errors }, getValues, setValue, watch } = useForm<FormData>({
-        defaultValues: {
-            ...ticket,
-            user: user?.name || '',
-        }
-    });
+  const handleClickSuccess = () => {
+    setOpenSuccess(true);
+  };
+  const handleClickDanger = () => {
+    setOpenDanger(true);
+  };
 
-
-    useEffect(() => {
-      const subscription = watch(( value, { name, type } ) => {
-          if ( name === 'location' ) {
-              const newTicketId = value.location; 
-
-               setValue('ticketId', newTicketId + '-' + incrementalId + 1);
-          }
-      });
-      return () => subscription.unsubscribe();
-    }, [watch, setValue])
-    
-    const onFilesSelected = async({ target }: ChangeEvent<HTMLInputElement>) => {
-        if ( !target.files || target.files.length === 0 ) {
-            return;
-        }
-
-        try {
-            
-            // console.log( file );
-            for( const file of target.files ) {
-                const formData = new FormData();
-                formData.append('file', file);
-                const { data } = await tesloApi.post<{ message: string}>('/admin/upload', formData);
-                setValue('images', [...getValues('images'), data.message], { shouldValidate: true });
-            }
-
-
-        } catch (error) {
-            console.log({ error });
-        }
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
     }
 
-    const onDeleteImage = ( image: string) =>{
-        setValue(
-            'images', 
-            getValues('images').filter( img => img !== image ),
-            { shouldValidate: true }
-        );
-    }
+    setOpenSuccess(false);
+    setOpenDanger(false);
+  };
 
-    const addComment = () => {
+  const handleDateChange = async (newDate: Date | null) => {
+    try {
+      setIsSaving(true);
 
-        // Copia el array existente de comentarios y agrega el nuevo comentario al final
-        setValue('comment', [...getValues('comment'), newComment], {
-          shouldValidate: true,
-        });
-    
-        // Limpia el estado local para el próximo comentario
-        setNewComment({
-            user: user?.name || '', // Puedes establecer el usuario automáticamente o dejarlo en blanco
-          commentary: '',
-          dateTime: new Date().toISOString(),
-        });
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          estimatedFinish: newDate, // Actualiza la fecha estimada en la base de datos
+        }),
+      });
+
+      if (response.ok) {
+        const updatedTicket = await response.json();
+        setSelectedDate(newDate);
+        handleClose();
+        handleClickSuccess();
+      } else {
+        handleClose();
+        handleClickDanger();
       }
+    } catch (error) {
+      console.error("Error al actualizar la fecha", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    const onSubmit = async( form: FormData ) => {
-        
-        //if ( form.images.length < 2 ) return alert('Mínimo 2 imagenes');
-        setIsSaving(true);
+  const handleStatusChange = async (event: SelectChangeEvent) => {
+    const newStatus = event.target.value;
+    setUpdatedStatus(newStatus);
 
-        try {
-            const { data } = await tesloApi({
-                url: '/admin/tickets',
-                method: form._id ? 'PUT': 'POST',  // si tenemos un _id, entonces actualizar, si no crear
-                data: form
-            });
+    // Realiza una solicitud PUT al servidor para actualizar el estado del ticket
+    try {
+      setIsSaving(true);
 
-            console.log({data});
-            if ( !form._id ) {
-                router.replace(`/admin/tickets/${ form.ticketId }`);
-            } else {
-                setIsSaving(false)
-            }
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          status: newStatus,
+        }),
+      });
 
+      if (response.ok) {
+        handleClose();
+        handleClickSuccess();
+      } else {
+        handleClose();
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error al actualizar el estado", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-        } catch (error) {
-            console.log(error);
-            setIsSaving(false);
-        }
+  const handleAssignedChange = async (event: SelectChangeEvent) => {
+    const newAssigned = event.target.value;
+    setUpdatedAssigned(newAssigned);
 
+    // Realiza una solicitud PUT al servidor para actualizar el estado del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          assignedTo: newAssigned,
+        }),
+      });
+
+      if (response.ok) {
+        handleClose();
+        handleClickSuccess();
+      } else {
+        handleClose();
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error al actualizar el estado", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePriorityChange = async (event: SelectChangeEvent) => {
+    const newPriority = event.target.value;
+    setUpdatedPriority(newPriority);
+
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          priority: newPriority,
+        }),
+      });
+
+      if (response.ok) {
+        handleClickSuccess();
+      } else {
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const finishTicket = async () => {
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          finishBy: user.name,
+          finishAt: new Date(),
+          status: "Finalizado",
+        }),
+      });
+
+      if (response.ok) {
+        handleClickSuccess();
+      } else {
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+      window.location.reload();
+    }
+  };
+
+  const addDiagnostic = async () => {
+    // Realiza una solicitud PUT al servidor para actualizar la prioridad del ticket
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id,
+          diagnostic: {
+            user: user.name,
+            observation: newDiagnostic,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        handleClickSuccess();
+      } else {
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error al actualizar la prioridad", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (newComment.trim() === "") {
+      return;
     }
 
-    return (
+    try {
+      setIsSaving(true);
+      const response = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: ticket._id, // Assuming ticket._id is the ID of the current ticket
+          comments: [
+            {
+              user: user.name, // Replace with actual user ID
+              comment: newComment,
+              createdAt: new Date(),
+            },
+            ...comments, // Keep the existing comments
+          ],
+        }),
+      });
 
-        
-        <AdminLayout 
-            title={'Ticket'} 
-            subTitle={`Editando: `}
-            icon={ <DriveFileRenameOutline /> }
-        >
+      if (response.ok) {
+        // Comment successfully added to the server
+        const updatedTicket = await response.json();
+        setComments(updatedTicket.comments);
+        setNewComment("");
+        handleClickSuccess();
+      } else {
+        // Handle error
+        handleClickDanger();
+      }
+    } catch (error) {
+      console.error("Error adding comment", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-            {ticket._id?(
-                <Grid container spacing={12}>
+  function stringToColor(string: string) {
+    let hash = 0;
+    let i;
 
-                    <Grid item xs={12} sm={ 6 }>
-                        <Typography variant='subtitle1' component='h2'>Solicitante:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.ticketId}` }</Typography>
-                        <Divider></Divider>
-                        <Typography variant='subtitle1' component='h2'>Servicio:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.location}` }</Typography>
-                        <Divider></Divider>
-                        <Typography variant='subtitle1' component='h2'>Creado por:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.user}` }</Typography>
-                        <Divider></Divider>
-                    </Grid>    
-                    <Grid item xs={12} sm={ 6 }>
-                    <Typography variant='subtitle1' component='h2'>Asunto:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.summary}` }</Typography>
-                        <Divider></Divider>
-                        <Typography variant='subtitle1' component='h2'>Problema reportado:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.detail}` }</Typography>
-                        <Divider></Divider>
-                        <Typography variant='subtitle1' component='h2'>Creado el:</Typography>
-                        <Typography variant='h1' component='h1'>{ `${ticket.createdAt}` }</Typography>
-                        <Divider></Divider>
-                    </Grid>    
-                    <Divider></Divider>
-                    
-                    <Grid item xs={12} sm={ 12 }>      
-                    <form onSubmit={ handleSubmit( onSubmit ) }>
-                        <Grid container spacing={2}>
-                            {/* Data */}
-                            <Grid item xs={12} sm={ 6 }>
-                                <TextField
-                                    label="Usuario"
-                                    variant="standard"
-                                    fullWidth
-                                    value={newComment.user}
-                                    onChange={(e) =>
-                                    setNewComment({ ...newComment, user: e.target.value })
-                                    }
-                  // Resto de las validaciones y manejo de errores si es necesario
-                                />
-                <TextField
-                  label="Comentario"
-                  variant="standard"
-                  fullWidth
-                  value={newComment.commentary}
-                  onChange={(e) =>
-                    setNewComment({ ...newComment, commentary: e.target.value })
-                  }
-                  // Resto de las validaciones y manejo de errores si es necesario
-                />
-                            </Grid>
-                    </Grid>
-
-                
-                    <Box display='flex' justifyContent='end' sx={{ mb: 1 }}>
-                            <Button 
-                            color="secondary"
-                            startIcon={ <SaveOutlined /> }
-                            sx={{ width: '150px' }}
-                            type="submit"
-                            disabled={ isSaving }
-                            >
-                            Guardar
-                            </Button>
-                            <Button
-                                color="primary"
-                                variant="contained"
-                                fullWidth
-                                onClick={addComment} // Llamar a la función para agregar el comentario
-                                >
-                                Agregar Comentario
-                            </Button>
-                        </Box>
-                
-
-
-            </form>
-            </Grid> 
-                  
-                </Grid>
-            
-            ):(
-            <form onSubmit={ handleSubmit( onSubmit ) }>
-                <Box display='flex' justifyContent='end' sx={{ mb: 1 }}>
-                    <Button 
-                        color="secondary"
-                        startIcon={ <SaveOutlined /> }
-                        sx={{ width: '150px' }}
-                        type="submit"
-                        disabled={ isSaving }
-                        >
-                        Guardar
-                    </Button>
-                </Box>
-
-                <Grid container spacing={2}>
-                    {/* Data */}
-                    
-                    <Grid item xs={12} sm={ 6 }>
-
-                        <TextField
-                            label=""
-                            variant='standard'
-                            //disabled 
-                            fullWidth
-                            sx={{ mb: 1 }}
-                            { ...register('ticketId', {
-                                required: 'Este campo es requerido',
-                                validate: (val) => val.trim().includes(' ') ? 'No puede tener espacios en blanco':undefined
-                            })}
-                            error={ !!errors.ticketId }
-                            helperText={ errors.ticketId?.message }
-                        />
-                        
-
-                        
-                        <TextField
-                            label="Resumen"
-                            variant='outlined'
-                            //disabled={ticket._id?false:true}
-                            fullWidth 
-                            multiline
-                            sx={{ mb: 1 }}
-                            { ...register('summary', {
-                                required: 'Este campo es requerido',
-                            })}
-                            error={ !!errors.summary }
-                            helperText={ errors.summary?.message }
-                        />
-
-                        <TextField
-                            label="Detalle"
-                            variant='outlined'
-                            //disabled={ticket._id?false:true}
-                            fullWidth 
-                            sx={{ mb: 1 }}
-                            { ...register('detail', {
-                                required: 'Este campo es requerido',
-                            })}
-                            error={ !!errors.detail }
-                            helperText={ errors.detail?.message }
-                        />
-                        
-                        <TextField
-                            label="Usuario"
-                            variant='standard'
-                            //disabled
-                            fullWidth 
-                            value={session?.user?.name || ''}
-                            sx={{ mb: 1 }}
-                            { ...register('user', {
-                                required: 'Este campo es requerido',
-                            })}
-                            error={ !!errors.user }
-                            helperText={ errors.user?.message }
-                        />
-
-                        <Divider sx={{ my: 1 }} />
-
-
-
-                    </Grid>
-
-                    {/* Tags e imagenes */}
-
-
-                    <Grid item xs={12} sm={ 6 }>
-                        <TextField
-                            label="Assignado a"
-                            variant='outlined'
-                            //disabled={ticket._id?false:true}
-                            fullWidth 
-                            sx={{ mb: 1 }}
-                            { ...register('assignedTo', {
-                                required: 'Este campo es requerido',
-                            })}
-                            error={ !!errors.user }
-                            helperText={ errors.user?.message }
-                        />
-
-                        <Divider sx={{ my: 2  }}/>
-                        
-                        <Box display='flex' flexDirection="column">
-                            <FormLabel sx={{ mb:1}}>Imágenes</FormLabel>
-                            <Button
-                                color="secondary"
-                                fullWidth
-                                startIcon={ <UploadOutlined /> }
-                                sx={{ mb: 3 }}
-                                onClick={ () => fileInputRef.current?.click() }
-                            >
-                                Cargar imagen
-                            </Button>
-                            <input 
-                                ref={ fileInputRef }
-                                type="file"
-                                multiple
-                                accept='image/png, image/gif, image/jpeg'
-                                style={{ display: 'none' }}
-                                onChange={ onFilesSelected }
-                            />
-
-
-
-                            <Grid container spacing={2}>{
-                                getValues('images').map( img => (
-                                    <Grid item xs={4} sm={3} key={img}>
-                                        <Card>
-                                            <CardMedia 
-                                                component='img'
-                                                className='fadeIn'
-                                                image={ img }
-                                                alt={ img }
-                                            />
-                                            <CardActions>
-                                                <Button 
-                                                    fullWidth 
-                                                    color="error"
-                                                    onClick={()=> onDeleteImage(img)}
-                                                    >
-                                                Borrar
-                                                </Button>
-                                            </CardActions>
-                                        </Card>
-                                    </Grid>
-                                    ))
-                                }
-                            </Grid>
-
-                        </Box>
-                        
-                        <TextField
-                            id="filled-select-currency"
-                            select
-                            label="Sector"
-                            defaultValue=""
-                            variant="filled"
-                            sx={{ width: '250px' }}
-                            >
-                            {validLocations.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                            </MenuItem>
-                            ))}
-                        </TextField>
-        <Autocomplete
-        options={serialNumber.map((option) => option.serial)} // Pasar las opciones serialNumber
-        value={selectedSerial}
-        onChange={(event, newValue) => setSelectedSerial(newValue || '')} // Manejar el cambio de valor
-        renderInput={(params) => (
-          <TextField {...params} label="Codificacion equipo." variant="standard" />
-        )}
-      />
-
-
-
-                    </Grid>
-                    
-
-                </Grid>
-
-                
-
-
-            </form>)}
-        </AdminLayout>
-    )
-}
-
-// You should use getServerSideProps when:
-// - Only if you need to pre-render a page whose data must be fetched at request time
-
-
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    
-    const { ticketId = ''} = query;
-    
-    let ticket: ITicket | null;
-
-    if ( ticketId === 'new' ) {
-        // crear un producto
-        const tempTicket = JSON.parse( JSON.stringify( new Ticket() ) );
-        delete tempTicket._id;
-
-        ticket = tempTicket;
-
-    } else {
-        ticket = await dbTickets.getTicketByTicketId(ticketId.toString());
+    for (i = 0; i < string.length; i += 1) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    if ( !ticketId ) {
-        return {
-            redirect: {
-                destination: '/admin/tickets',
-                permanent: false,
-            }
-        }
-    }
-    
+    let color = "#";
 
+    for (i = 0; i < 3; i += 1) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += `00${value.toString(16)}`.slice(-2);
+    }
+
+    return color;
+  }
+
+  function stringAvatar(name: string, size: number) {
     return {
-        props: {
-            ticket
+      sx: {
+        bgcolor: stringToColor(name),
+        width: size,
+        height: size,
+        fontSize: size / 2,
+      },
+      children: name
+        .split(" ")
+        .map((word) => word[0])
+        .join(""),
+    };
+  }
+
+  const activeStep =
+    1 + steps.findIndex((step) => step[ticketType]?.status === ticket.status);
+
+  return (
+    <ShopLayout title={ticket.ticketId} pageDescription={ticket.summary}>
+      <Box
+        display="flex"
+        flexDirection="row"
+        gap={2}
+        justifyContent="center"
+        alignItems="start"
+      >
+        <Snackbar open={openSuccess} autoHideDuration={3000} onClose={handleClose} anchorOrigin =  { { vertical: 'top', horizontal: 'center' } }>
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Actualizacion exitosa
+          </Alert>
+        </Snackbar>
+        <Snackbar open={openDanger} autoHideDuration={3000} onClose={handleClose} anchorOrigin =  { { vertical: 'top', horizontal: 'center' } }>
+          <Alert
+            onClose={handleClose}
+            severity="error"
+            sx={{ width: "100%" }}
+          >
+            Ups! Hubo un problema, vuelva a intentarlo o llame al interno
+          </Alert>
+        </Snackbar>
+        <Grid item xs={12} sm={8} gap={2}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            {/* titulos */}
+            <Box display="flex" justifyContent="space-between">
+              <Box display="flex" flexDirection="row" gap={1}>
+                <Typography
+                  variant="subtitle1"
+                  component="h2"
+                >{`Ticket Nro:`}</Typography>
+                <Typography variant="h1" component="h1">
+                  {ticket.ticketId}
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                sx={{ width: "auto", padding: 1, margin: 2 }}
+                onClick={finishTicket}
+              >
+                Finalizar ticket
+              </Button>
+            </Box>
+            <Box display="flex" flexDirection="row" gap={2}>
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle2">Problema:</Typography>
+                <TextField
+                  id="outlined-multiline-static"
+                  disabled
+                  multiline
+                  rows={3}
+                  value={ticket.summary}
+                />
+              </Box>
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle2">Descripción:</Typography>
+                <TextField
+                  id="outlined-multiline-static"
+                  disabled
+                  multiline
+                  rows={3}
+                  value={ticket.detail}
+                />
+              </Box>
+              <Box sx={{ mt: 3 }} display="flex" flexDirection="column">
+                <Typography variant="subtitle2">Diagnostico:</Typography>
+                <TextField
+                  id="outlined-multiline-static"
+                  disabled={
+                    user?.role != "admin" ||
+                    ticket.diagnostic.observation == null
+                  }
+                  multiline
+                  rows={3}
+                  value={newDiagnostic}
+                  onChange={(e) => setNewDiagnostic(e.target.value)}
+                />
+                {user?.role == "admin" && !ticket.diagnostic.observation ? (
+                  <Button onClick={addDiagnostic}>Agregar Diagnostico</Button>
+                ) : null}
+              </Box>
+            </Box>
+            {/* Descripción */}
+
+            <Typography variant="subtitle2">Seguimiento:</Typography>
+            <Box display="flex" flexDirection="row" gap={2}>
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {steps[ticketType].step.map((step) => (
+                  <Step key={step.label}>
+                    <StepLabel>{step.label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              {!ticket.finishBy && (
+                <Box display="flex" flexDirection="column" gap={1}>
+                  <Typography variant="subtitle2" component="h2">
+                    Fecha estimada de finalizacion:
+                  </Typography>
+                  {user?.role == "admin" && !ticket.finishBy ? (
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        format="dd/MM/yyyy"
+                        value={new Date(ticket?.estimatedFinish)}
+                        onChange={handleDateChange}
+                      />
+                    </LocalizationProvider>
+                  ) : (
+                    <Typography variant="h1" component="h1">
+                      {ticket.estimatedFinish &&
+                        format(new Date(ticket.estimatedFinish), "dd/MM/yyyy")}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Box>
+            {ticket.images && ticket.images.length > 0 ? (
+              <Typography variant="subtitle2" component="h2">
+                No hay imagenes asociadas
+              </Typography>
+            ) : (
+              <Typography variant="subtitle2" component="h2">
+                No hay imagenes asociadas
+              </Typography>
+            )}
+          </Box>
+          {/* Comentarios */}
+          <Box sx={{ mt: 3 }}>
+            <Grid item xs={12} sm={12}>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <Typography variant="h1">Comentarios</Typography>
+                <Paper
+                  style={{ maxHeight: 200, overflow: "auto" }}
+                  elevation={0}
+                >
+                  <Stack
+                    direction="column"
+                    justifyContent="flex-start"
+                    alignItems="flex-start"
+                    spacing={2}
+                    overflow="hidden"
+                  >
+                    {comments.map((comment) => (
+                      <Card
+                        sx={{ maxWidth: 545, width: 400, height: 120 }}
+                        key={format(
+                          new Date(comment.createdAt),
+                          "dd/MM/yyyy HH:mm:ss"
+                        )}
+                      >
+                        <CardHeader
+                          avatar={
+                            <Avatar {...stringAvatar(comment.user, 35)} />
+                          }
+                          title={comment.user}
+                          subheader={format(
+                            new Date(comment.createdAt),
+                            "dd/MM/yyyy HH:mm"
+                          )}
+                        />
+                        <Divider variant="middle" />
+                        <CardActions>
+                          <Typography variant="body2" color="text.secondary">
+                            {comment.comment}
+                          </Typography>
+                        </CardActions>
+                      </Card>
+                    ))}
+                  </Stack>
+                </Paper>
+                <Divider variant="middle" />
+                <Box
+                  display="flex"
+                  flexDirection="row"
+                  alignItems={"center"}
+                  gap={2}
+                >
+                  <TextField
+                    label="Agregar comentario"
+                    multiline
+                    rows={2}
+                    fullWidth
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                  <Button onClick={addComment}>Agregar Comentario</Button>
+                </Box>
+              </Box>
+            </Grid>
+          </Box>
+        </Grid>
+        {/*Sector lateral*/}
+        <Box width={400} display="flex" flexDirection="column" gap={5}>
+          <Paper elevation={6}>
+            <Stack
+              direction="column"
+              justifyContent="flex-start"
+              alignItems="flex-start"
+              spacing={6}
+              paddingBottom={3}
+              paddingTop={3}
+              paddingLeft={4}
+            >
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Estado:
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedStatus}
+                    defaultValue={ticket.status}
+                    onChange={handleStatusChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    {status.map((state) => (
+                      <MenuItem key={state} value={state}>
+                        {state}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    paddingLeft={sideSeparation}
+                  >
+                    {ticket.status}
+                  </Typography>
+                )}
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Prioridad
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedPriority}
+                    defaultValue={ticket.priority}
+                    onChange={handlePriorityChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    <MenuItem value={"ALTA"}>Alta</MenuItem>
+                    <MenuItem value={"MEDIA"}>Media</MenuItem>
+                    <MenuItem value={"BAJA"}>Baja</MenuItem>
+                  </Select>
+                ) : (
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    paddingLeft={sideSeparation}
+                  >
+                    {ticket?.priority}
+                  </Typography>
+                )}
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Creado el:
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {format(new Date(ticket.createdAt), "dd/MM/yyyy HH:mm")}
+                </Typography>
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Finalizado el:
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {ticket.finishAt
+                    ? format(new Date(ticket.finishAt), "dd/MM/yyyy HH:mm")
+                    : "-"}
+                </Typography>
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Reportado por:
+                </Typography>
+                <Box
+                  display="flex"
+                  flexDirection="row"
+                  alignItems={"center"}
+                  gap={1}
+                  paddingLeft={sideSeparation}
+                >
+                  <Avatar {...stringAvatar(ticket.user, 50)} />
+                  <Typography variant="h1" component="h1">
+                    {ticket.user}
+                  </Typography>
+                </Box>
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Assignado a:
+                </Typography>
+                {user?.role == "admin" && !ticket.finishBy ? (
+                  <Select
+                    value={updatedAssigned}
+                    defaultValue={updatedAssigned}
+                    onChange={handleAssignedChange}
+                    inputProps={{ "aria-label": "Without label" }}
+                  >
+                    {person.map((person) => (
+                      <MenuItem key={person} value={person}>
+                        {person}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <>
+                    {ticket.assignedTo ? (
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        alignItems={"center"}
+                        gap={1}
+                        paddingLeft={sideSeparation}
+                      >
+                        <Avatar {...stringAvatar(ticket.assignedTo, 50)} />
+                        <Typography variant="h1" component="h1">
+                          {ticket.assignedTo}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography
+                        variant="h1"
+                        component="h1"
+                        paddingLeft={sideSeparation}
+                      >
+                        -
+                      </Typography>
+                    )}
+                  </>
+                )}
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" component="h2">
+                  Equipo asociado
+                </Typography>
+                <Typography
+                  variant="h1"
+                  component="h1"
+                  paddingLeft={sideSeparation}
+                >
+                  {ticket.equipId}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Box>
+      </Box>
+    </ShopLayout>
+  );
+};
+export const getServerSideProps: GetServerSideProps = async ({
+  query,
+  req,
+}) => {
+  let ticketId = query.ticketId;
+
+  if (Array.isArray(ticketId)) {
+    ticketId = ticketId[0];
+  }
+
+  const ticket = await dbTickets.getTicketByTicketId(ticketId);
+  const session = await getSession({ req });
+  const user = await getUserData(session.user.email);
+
+  delete user._id;
+
+  if (ticket.finishBy){
+    return {
+        redirect: {
+            destination: `/ticket/${ticketId}`,
+            permanent: false,
         }
     }
-}
+  }
+  return {
+    props: {
+      ticket,
+      user,
+    },
+  };
+};
 
-
-export default TicketAdminPage
+export default TicketPage;

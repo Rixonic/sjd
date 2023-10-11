@@ -5,18 +5,18 @@ import { useForm } from 'react-hook-form';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 
-import { Box, Button, Typography, Stack, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField } from '@mui/material';
+import { Box, Button, Typography, capitalize, Card, CardActions, CardMedia, Checkbox, Chip, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, ListItem, Paper, Radio, RadioGroup, TextField } from '@mui/material';
 import { DriveFileRenameOutline, SaveOutlined, UploadOutlined } from '@mui/icons-material';
 import MenuItem from '@mui/material/MenuItem';
 import Autocomplete from '@mui/material/Autocomplete';
 
 
-import { AdminLayout } from '../../components/layouts'
-import { ITicket } from '../../interfaces';
-import { dbTickets } from '../../database';
-import { tesloApi } from '../../api';
-import { Ticket } from '../../models';
-import { AuthContext } from '../../context';
+import { AdminLayout } from '../../../components/layouts'
+import { ITicket } from '../../../interfaces';
+import { dbTickets } from '../../../database';
+import { tesloApi } from '../../../api';
+import { Ticket } from '../../../models';
+import { AuthContext } from '../../../context';
 
 
 const serialNumber = [
@@ -128,12 +128,12 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
     const [isSaving, setIsSaving] = useState(false);
 
     const incrementalId = data?.length;
-    const userName = session?.user?.name;
+    const userName = user?.name;
 
     const { register, handleSubmit, formState:{ errors }, getValues, setValue, watch } = useForm<FormData>({
         defaultValues: {
             ...ticket,
-            user: session?.user?.name || '',
+            user: user?.name || '',
         }
     });
 
@@ -187,7 +187,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
     
         // Limpia el estado local para el próximo comentario
         setNewComment({
-            user: session?.user?.name || '', // Puedes establecer el usuario automáticamente o dejarlo en blanco
+            user: user?.name || '', // Puedes establecer el usuario automáticamente o dejarlo en blanco
           commentary: '',
           dateTime: new Date().toISOString(),
         });
@@ -220,28 +220,119 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
 
     }
 
-    console.log(session)
     return (
 
         
         <AdminLayout 
             title={'Ticket'} 
-            subTitle={`Nuevo ticket `}
+            subTitle={`Editando: `}
             icon={ <DriveFileRenameOutline /> }
-        >            
-            <form onSubmit={ handleSubmit( onSubmit ) }>
+        >
 
-                    <Stack
-                        direction="row"
-                        justifyContent="space-evenly"
-                        alignItems="center"
-                        spacing={2}
-                    >
+            {ticket._id?(
+                <Grid container spacing={12}>
+
+                    <Grid item xs={12} sm={ 6 }>
+                        <Typography variant='subtitle1' component='h2'>Solicitante:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.ticketId}` }</Typography>
+                        <Divider></Divider>
+                        <Typography variant='subtitle1' component='h2'>Servicio:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.location}` }</Typography>
+                        <Divider></Divider>
+                        <Typography variant='subtitle1' component='h2'>Creado por:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.user}` }</Typography>
+                        <Divider></Divider>
+                    </Grid>    
+                    <Grid item xs={12} sm={ 6 }>
+                    <Typography variant='subtitle1' component='h2'>Asunto:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.summary}` }</Typography>
+                        <Divider></Divider>
+                        <Typography variant='subtitle1' component='h2'>Problema reportado:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.detail}` }</Typography>
+                        <Divider></Divider>
+                        <Typography variant='subtitle1' component='h2'>Creado el:</Typography>
+                        <Typography variant='h1' component='h1'>{ `${ticket.createdAt}` }</Typography>
+                        <Divider></Divider>
+                    </Grid>    
+                    <Divider></Divider>
+                    
+                    <Grid item xs={12} sm={ 12 }>      
+                    <form onSubmit={ handleSubmit( onSubmit ) }>
+                        <Grid container spacing={2}>
+                            {/* Data */}
+                            <Grid item xs={12} sm={ 6 }>
+                                <TextField
+                                    label="Usuario"
+                                    variant="standard"
+                                    fullWidth
+                                    value={newComment.user}
+                                    onChange={(e) =>
+                                    setNewComment({ ...newComment, user: e.target.value })
+                                    }
+                  // Resto de las validaciones y manejo de errores si es necesario
+                                />
+                <TextField
+                  label="Comentario"
+                  variant="standard"
+                  fullWidth
+                  value={newComment.commentary}
+                  onChange={(e) =>
+                    setNewComment({ ...newComment, commentary: e.target.value })
+                  }
+                  // Resto de las validaciones y manejo de errores si es necesario
+                />
+                            </Grid>
+                    </Grid>
+
+                
+                    <Box display='flex' justifyContent='end' sx={{ mb: 1 }}>
+                            <Button 
+                            color="secondary"
+                            startIcon={ <SaveOutlined /> }
+                            sx={{ width: '150px' }}
+                            type="submit"
+                            disabled={ isSaving }
+                            >
+                            Guardar
+                            </Button>
+                            <Button
+                                color="primary"
+                                variant="contained"
+                                fullWidth
+                                onClick={addComment} // Llamar a la función para agregar el comentario
+                                >
+                                Agregar Comentario
+                            </Button>
+                        </Box>
+                
+
+
+            </form>
+            </Grid> 
+                  
+                </Grid>
+            
+            ):(
+            <form onSubmit={ handleSubmit( onSubmit ) }>
+                <Box display='flex' justifyContent='end' sx={{ mb: 1 }}>
+                    <Button 
+                        color="secondary"
+                        startIcon={ <SaveOutlined /> }
+                        sx={{ width: '150px' }}
+                        type="submit"
+                        disabled={ isSaving }
+                        >
+                        Guardar
+                    </Button>
+                </Box>
+
+                <Grid container spacing={2}>
                     {/* Data */}
+                    
                     <Grid item xs={12} sm={ 6 }>
 
                         <TextField
-                            label="ID"
+                            label=""
                             variant='standard'
                             //disabled 
                             fullWidth
@@ -253,24 +344,10 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                             error={ !!errors.ticketId }
                             helperText={ errors.ticketId?.message }
                         />
+                        
 
-                        <Divider sx={{ my: 3  }}/>
-
+                        
                         <TextField
-                            label="Solicitante"
-                            variant='standard'
-                            //disabled
-                            fullWidth 
-                            value={session?.user?.name || ''}
-                            sx={{ mb: 1 }}
-                            { ...register('user', {
-                                required: 'Este campo es requerido',
-                            })}
-                            error={ !!errors.user }
-                            helperText={ errors.user?.message }
-                        />
-
-<TextField
                             label="Resumen"
                             variant='outlined'
                             //disabled={ticket._id?false:true}
@@ -283,24 +360,12 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                             error={ !!errors.summary }
                             helperText={ errors.summary?.message }
                         />
-                        
-                        </Grid>
-                        <Grid item xs={12} sm={ 6 }>
-
-
-                        
-
-
-                        <Divider sx={{ my: 3  }}/>
 
                         <TextField
                             label="Detalle"
                             variant='outlined'
                             //disabled={ticket._id?false:true}
                             fullWidth 
-                            multiline
-                            rows={4}
-                            maxRows={6}
                             sx={{ mb: 1 }}
                             { ...register('detail', {
                                 required: 'Este campo es requerido',
@@ -309,12 +374,44 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                             helperText={ errors.detail?.message }
                         />
                         
-                        <Divider sx={{ my: 3  }}/>
+                        <TextField
+                            label="Usuario"
+                            variant='standard'
+                            //disabled
+                            fullWidth 
+                            value={session?.user?.name || ''}
+                            sx={{ mb: 1 }}
+                            { ...register('user', {
+                                required: 'Este campo es requerido',
+                            })}
+                            error={ !!errors.user }
+                            helperText={ errors.user?.message }
+                        />
 
+                        <Divider sx={{ my: 1 }} />
+
+
+
+                    </Grid>
 
                     {/* Tags e imagenes */}
 
-                        <Divider sx={{ my: 3  }}/>
+
+                    <Grid item xs={12} sm={ 6 }>
+                        <TextField
+                            label="Assignado a"
+                            variant='outlined'
+                            //disabled={ticket._id?false:true}
+                            fullWidth 
+                            sx={{ mb: 1 }}
+                            { ...register('assignedTo', {
+                                required: 'Este campo es requerido',
+                            })}
+                            error={ !!errors.user }
+                            helperText={ errors.user?.message }
+                        />
+
+                        <Divider sx={{ my: 2  }}/>
                         
                         <Box display='flex' flexDirection="column">
                             <FormLabel sx={{ mb:1}}>Imágenes</FormLabel>
@@ -384,7 +481,7 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
         value={selectedSerial}
         onChange={(event, newValue) => setSelectedSerial(newValue || '')} // Manejar el cambio de valor
         renderInput={(params) => (
-          <TextField {...params} label="ID del equipo" variant="standard" />
+          <TextField {...params} label="Codificacion equipo." variant="standard" />
         )}
       />
 
@@ -393,22 +490,12 @@ const TicketAdminPage:FC<Props> = ({ ticket }) => {
                     </Grid>
                     
 
-                </Stack>
+                </Grid>
 
                 
-                <Box display='flex' justifyContent='center' sx={{ mb: 1 }}>
-                    <Button 
-                        color="secondary"
-                        startIcon={ <SaveOutlined /> }
-                        sx={{ width: '150px' }}
-                        type="submit"
-                        disabled={ isSaving }
-                        >
-                        Guardar
-                    </Button>
-                </Box>
 
-            </form>
+
+            </form>)}
         </AdminLayout>
     )
 }
@@ -423,10 +510,25 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     
     let ticket: ITicket | null;
 
+    if ( ticketId === 'new' ) {
+        // crear un producto
         const tempTicket = JSON.parse( JSON.stringify( new Ticket() ) );
         delete tempTicket._id;
 
         ticket = tempTicket;
+
+    } else {
+        ticket = await dbTickets.getTicketByTicketId(ticketId.toString());
+    }
+
+    if ( !ticketId ) {
+        return {
+            redirect: {
+                destination: '/admin/tickets',
+                permanent: false,
+            }
+        }
+    }
     
 
     return {

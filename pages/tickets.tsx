@@ -1,5 +1,12 @@
-import { ConfirmationNumberOutlined } from "@mui/icons-material";
+import { signIn, getSession, getProviders } from "next-auth/react";
+
+import {
+  ConfirmationNumberOutlined,
+  Margin,
+  Padding,
+} from "@mui/icons-material";
 import { UiContext, AuthContext } from "../context";
+import Cookies from "js-cookie";
 import Stepper from "@mui/material/Stepper";
 import Step from "@mui/material/Step";
 import StepButton from "@mui/material/StepButton";
@@ -12,6 +19,7 @@ import { GetServerSideProps } from "next";
 import { useForm } from "react-hook-form";
 import { TheTable } from "../components/table";
 import StepLabel from "@mui/material/StepLabel";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   ChangeEvent,
   FC,
@@ -20,7 +28,7 @@ import {
   useState,
   useContext,
 } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef,  ColumnFiltersState } from "@tanstack/react-table";
 import { tesloApi } from "../api";
 import { format } from "date-fns";
 import * as React from "react";
@@ -44,16 +52,17 @@ import {
   FormLabel,
   Grid,
   TextField,
+  Divider,
 } from "@mui/material";
 import { AddOutlined, UploadOutlined } from "@mui/icons-material";
 
-import {access}  from '../utils/access';
-
+import { validLocations } from "../utils/validLocations";
 
 import { AdminLayout } from "../components/layouts";
-import { ITicket } from "../interfaces";
+import { ITicket, IUser } from "../interfaces";
 
-import nodemailer from 'nodemailer'; // Importa nodemailer
+import { getUserData } from "../database/dbUsers";
+import { getTicketsByLocation } from "../database/dbTickets";
 
 const steps = [
   {
@@ -67,74 +76,22 @@ const steps = [
   },
 ];
 
-const validLocations = [
-  {
-    value: "NEONATOLOGIA",
-    label: "NEONATOLOGIA",
-    abreviation: "NEO",
-  },
-  {
-    value: "GUARDIA",
-    label: "GUARDIA",
-    abreviation: "GUA",
-  },
-  {
-    value: "UTI",
-    label: "UTI",
-    abreviation: "UTI",
-  },
-  {
-    value: "QUIROFANO",
-    label: "QUIROFANO",
-    abreviation: "QX",
-  },
-  {
-    value: "ENFERMERIA",
-    label: "ENFERMERIA",
-    abreviation: "ENF",
-  },
-  {
-    value: "INTERNACION",
-    label: "INTERNACION",
-    abreviation: "INT",
-  },
-  {
-    value: "CONSULTORIOS",
-    label: "CONSULTORIOS",
-    abreviation: "CON",
-  },
-  {
-    value: "ENDOSCOPIA",
-    label: "ENDOSCOPIA",
-    abreviation: "END",
-  },
-  {
-    value: "HEMODINAMIA",
-    label: "HEMODINAMIA",
-    abreviation: "HEM",
-  },
-  {
-    value: "IMAGENES",
-    label: "IMAGENES",
-    abreviation: "IMG",
-  },
-  {
-    value: "INGENIERIA",
-    label: "INGENIERIA",
-    abreviation: "ING",
-  },
-];
-
 const validSolicitud = [
   {
-    value: "TRASLADO",
-    label: "TRASLADO",
-    abreviation: "NEO",
+    value: "TRASLADO DE EQUIPO",
+    label: "TRASLADO DE EQUIPO",
   },
   {
-    value: "REPARACION",
-    label: "REPARACION",
-    abreviation: "GUA",
+    value: "FALLA DE EQUIPO/INSTRUMENTAL",
+    label: "FALLA DE EQUIPO/INSTRUMENTAL",
+  },
+  {
+    value: "SOLICITUD DE INSUMOS",
+    label: "SOLICITUD DE INSUMOS",
+  },
+  {
+    value: "GASES MEDICINALES",
+    label: "GASES MEDICINALES",
   },
 ];
 
@@ -159,6 +116,8 @@ interface FormData {
 
 interface Props {
   ticket: ITicket;
+  userData: IUser;
+  filteredTicketJSON: string;
 }
 
 const cols: ColumnDef<ITicket>[] = [
@@ -193,10 +152,18 @@ const cols: ColumnDef<ITicket>[] = [
   },
   {
     accessorKey: "status",
-    header: () => "Descripcion",
+    header: () => "Estado",
     cell: ({ row }) => {
       return (
-        <Chip label={row.original.status} color="warning" variant="filled" />
+        <Chip
+          label={row.original.status}
+          color={
+            row.original.status.toUpperCase() == "FINALIZADO"
+              ? "success"
+              : "warning"
+          }
+          variant="filled"
+        />
       );
     },
     meta: {
@@ -214,33 +181,38 @@ const cols: ColumnDef<ITicket>[] = [
   },
   {
     header: "Acciones",
-    columns: [
-      {
-        id: "_id",
-        cell: ({ row }) => (
-          <Stack direction="row">
-            <IconButton href={`/admin/tickets/${row.original.ticketId}`}>
-              <EditIcon />
-            </IconButton>
-            <IconButton href={`/ticket/${row.original.ticketId}`}>
-              <VisibilityIcon />
-            </IconButton>
-          </Stack>
-        ),
-        footer: (props) => props.column.id,
-      },
-    ],
+    meta: {
+      align: "center",
+    },
+
+    cell: ({ row }) => (
+      <Stack direction="row" justifyContent="center" alignItems="center">
+        <IconButton href={`/ticket/${row.original.ticketId}`}>
+          <VisibilityIcon />
+        </IconButton>
+      </Stack>
+    ),
+    footer: (props) => props.column.id,
   },
 ];
 
-const TicketsPage: FC<Props> = ({ ticket }) => {
-  const { user, isLoggedIn, logout } = useContext(AuthContext);
-  const userIndex = access.findIndex((data) => data.user === user?.email);
-  const userLocation = userIndex !== -1 ? access[userIndex].locations : "";
-  
+const TicketsPage: FC<Props> = ({ ticket, userData, filteredTicketJSON }) => {
 
-  const [filteredTickets, setFilteredTickets] = useState<ITicket[]>([]);
-  console.log(userIndex);
+  const allTickets: ITicket[] = JSON.parse(filteredTicketJSON);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+    setValue,
+    watch,
+  } = useForm<FormData>({
+    defaultValues: {
+      ...ticket,
+    },
+  });
+
+  const [open, setOpen] = React.useState(false);
   const [activeStep, setActiveStep] = React.useState(0);
   const [skipped, setSkipped] = React.useState(new Set<number>());
 
@@ -269,8 +241,6 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
 
   const handleSkip = () => {
     if (!isStepOptional(activeStep)) {
-      // You probably want to guard against something like this,
-      // it should never occur unless someone's actively trying to break something.
       throw new Error("You can't skip a step that isn't optional.");
     }
 
@@ -285,35 +255,11 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data, error } = useSWR<ITicket[]>("/api/admin/tickets");
-  useEffect(() => {
-    if (data) {
-      // Filtrar los tickets según la ubicación del usuario
-      const filtered = data.filter((ticket) => access[userIndex].locations.includes(ticket.location));
-      setFilteredTickets(filtered);
-    }
-    
-  }, [data, userLocation]);
-
-  if (!filteredTickets && !error) return <></>;
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-    setValue,
-    watch,
-  } = useForm<FormData>({
-    defaultValues: {
-      ...ticket
-    },
-  });
-
   const location = watch("location"); // Obtener el valor del sector seleccionado
 
   useEffect(() => {
     setValue("location", location, { shouldValidate: true }); // Set the location value immediately
-    const sectorTicketCount = (data || []).filter(
+    const sectorTicketCount = (allTickets || []).filter(
       (ticket) => ticket.location === location
     ).length;
 
@@ -328,9 +274,7 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
     const newTicketId = `${locationAbreviation}-${newTicketNumber}`;
 
     setValue("ticketId", newTicketId, { shouldValidate: true }); // Update the ID using the calculated value
-  }, [data, location, setValue]);
-
-
+  }, [location, setValue]);
 
   const onFilesSelected = async ({ target }: ChangeEvent<HTMLInputElement>) => {
     if (!target.files || target.files.length === 0) {
@@ -373,27 +317,22 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
         data: form,
       });
 
-     
       if (!form._id) {
-        await fetch('/api/sendEmail', {
-          method: 'POST',
+        await fetch("/api/sendEmail", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
       }
 
-
-     window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.log(error);
       setIsSaving(false);
       <Alert severity="error">Ups! Hubo un problema</Alert>;
-      
     }
   };
-
-  const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -405,16 +344,12 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
     <Alert severity="success">Su ticket a sido creado exitosamente</Alert>;
   };
 
-  if (!data && !error) return <></>;
-
   return (
-    
     <AdminLayout
       title={"Tickets"}
       subTitle={"Historial"}
       icon={<ConfirmationNumberOutlined />}
     >
-       
       <Box display="flex" justifyContent="end" sx={{ mb: 2 }}>
         <Button
           startIcon={<AddOutlined />}
@@ -426,13 +361,24 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
       </Box>
       <Box display="flex" justifyContent="end" sx={{ mb: 2 }}>
         <Grid item xs={12} sx={{ height: 650, width: "100%" }}>
-          <TheTable data={filteredTickets} columns={cols} />
+          <TheTable data={allTickets} columns={cols} />
         </Grid>
       </Box>
 
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Crear Ticket</DialogTitle>
-        <DialogContent>
+        <DialogTitle>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            Crear Ticket
+            <IconButton onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers>
           <DialogContentText>
             <Stepper activeStep={activeStep} alternativeLabel>
               {steps.map((step, index) => (
@@ -442,161 +388,169 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
               ))}
             </Stepper>
           </DialogContentText>
-
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {activeStep == 0 ? (
-              <>
-                <TextField
-                  label="Solicitante"
-                  variant="standard"
-                  fullWidth
-                  //value={session?.user?.name || ''}
-                  sx={{ mb: 1 }}
-                  {...register("user", {
-                    required: "Este campo es requerido",
-                  })}
-                  error={!!errors.user}
-                  helperText={errors.user?.message}
-                />
-                <TextField
-                  select
-                  label="Sector"
-                  defaultValue=""
-                  fullWidth
-                  variant="outlined"
-                  sx={{ mb: 1 }}
-                  {...register("location")}
-                >
-                  {validLocations.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  label="Ubicacion"
-                  defaultValue=""
-                  fullWidth
-                  variant="outlined"
-                  sx={{ mb: 1 }}
-                  {...register("sector")}
-                />
-              </>
-            ) : null}
-
-            {activeStep == 1 ? (
-              <>
-                <TextField
-                  select
-                  label="Tipo"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  sx={{ mb: 1 }}
-                  {...register("type", {
-                    required: "Este campo es requerido",
-                  })}
-                  error={!!errors.type}
-                  helperText={errors.type?.message}
-                >
-                  {validSolicitud.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </>
-            ) : null}
-
-            {activeStep == 2 ? (
-              <>
-                <TextField
-                  label="Resumen"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  sx={{ mb: 1 }}
-                  {...register("summary", {
-                    required: "Este campo es requerido",
-                  })}
-                  error={!!errors.summary}
-                  helperText={errors.summary?.message}
-                />
-
-                <TextField
-                  label="Detalle"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  sx={{ mb: 1 }}
-                  {...register("detail", {
-                    required: "Este campo es requerido",
-                  })}
-                  error={!!errors.detail}
-                  helperText={errors.detail?.message}
-                />
-
-                <TextField
-                  label="Codigo IC"
-                  variant="outlined"
-                  //disabled={ticket._id?false:true}
-                  fullWidth
-                  multiline
-                  sx={{ mb: 1 }}
-                  {...register("equipId")}
-                  error={!!errors.equipId}
-                  helperText={errors.equipId?.message}
-                />
-                <Box display="flex" flexDirection="column">
-                  <FormLabel sx={{ mb: 1 }}>Imágenes</FormLabel>
-                  <Button
-                    color="secondary"
+          <Divider sx={{ margin: 2 }} />
+          <DialogContentText>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {activeStep == 0 ? (
+                <>
+                  <Typography gutterBottom>Solicitante</Typography>
+                  <TextField
+                    variant="outlined"
                     fullWidth
-                    startIcon={<UploadOutlined />}
-                    sx={{ mb: 3 }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Cargar imagen
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/png, image/gif, image/jpeg"
-                    style={{ display: "none" }}
-                    onChange={onFilesSelected}
+                    value={userData.name || ""}
+                    sx={{ mb: 1 }}
+                    {...register("user", {
+                      required: "Este campo es requerido",
+                    })}
+                    error={!!errors.user}
+                    helperText={errors.user?.message}
                   />
-
-                  <Grid container spacing={2}>
-                    {getValues("images").map((img) => (
-                      <Grid item xs={4} sm={3} key={img}>
-                        <Card>
-                          <CardMedia
-                            component="img"
-                            className="fadeIn"
-                            image={img}
-                            alt={img}
-                          />
-                          <CardActions>
-                            <Button
-                              fullWidth
-                              color="error"
-                              onClick={() => onDeleteImage(img)}
-                            >
-                              Borrar
-                            </Button>
-                          </CardActions>
-                        </Card>
-                      </Grid>
+                  <Typography gutterBottom>Sector</Typography>
+                  <TextField
+                    select
+                    placeholder="Seleccione el sector"
+                    defaultValue=""
+                    fullWidth
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                    {...register("location")}
+                  >
+                    {validLocations.map((option) => (
+               userData.locations.map(location => location.toUpperCase()).includes(option.value.toUpperCase()) && (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              )
                     ))}
-                  </Grid>
-                </Box>
-              </>
-            ) : null}
-            {
-              <React.Fragment>
-                <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
+                  </TextField>
+                  <Typography gutterBottom>Ubicacion</Typography>
+                  <TextField
+                    defaultValue=""
+                    placeholder="Ingrese la ubicacion"
+                    fullWidth
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                    {...register("sector")}
+                  />
+                </>
+              ) : null}
+
+              {activeStep == 1 ? (
+                <>
+                  <Typography gutterBottom>Tipo de solicitud</Typography>
+                  <TextField
+                    select
+                    placeholder="Seleccione el tipo de solicitud"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    sx={{ mb: 1 }}
+                    {...register("type", {
+                      required: "Este campo es requerido",
+                    })}
+                    error={!!errors.type}
+                    helperText={errors.type?.message}
+                  >
+                    {validSolicitud.map((option) => (
+                      
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </>
+              ) : null}
+
+              {activeStep == 2 ? (
+                <>
+                  <Typography gutterBottom>Resumen</Typography>
+                  <TextField
+                    placeholder="Ingrese el asunto del problema"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    sx={{ mb: 1 }}
+                    {...register("summary", {
+                      required: "Este campo es requerido",
+                    })}
+                    error={!!errors.summary}
+                    helperText={errors.summary?.message}
+                  />
+                  <Typography gutterBottom>Detalle</Typography>
+                  <TextField
+                    placeholder="Detalle del incidente"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    sx={{ mb: 1 }}
+                    {...register("detail", {
+                      required: "Este campo es requerido",
+                    })}
+                    error={!!errors.detail}
+                    helperText={errors.detail?.message}
+                  />
+                  <Typography gutterBottom>Codigo IC</Typography>
+                  <TextField
+                    placeholder="El codigo IC puede encontrarlo en la etiqueta del equipo "
+                    variant="outlined"
+                    //disabled={ticket._id?false:true}
+                    fullWidth
+                    multiline
+                    sx={{ mb: 1 }}
+                    {...register("equipId")}
+                    error={!!errors.equipId}
+                    helperText={errors.equipId?.message}
+                  />
+                  <Box display="flex" flexDirection="column">
+                    <FormLabel sx={{ mb: 1 }}>Imágenes</FormLabel>
+                    <Button
+                      color="secondary"
+                      fullWidth
+                      startIcon={<UploadOutlined />}
+                      sx={{ mb: 3 }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Cargar imagen
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/png, image/gif, image/jpeg"
+                      style={{ display: "none" }}
+                      onChange={onFilesSelected}
+                    />
+
+                    <Grid container spacing={2}>
+                      {getValues("images").map((img) => (
+                        <Grid item xs={4} sm={3} key={img}>
+                          <Card>
+                            <CardMedia
+                              component="img"
+                              className="fadeIn"
+                              image={img}
+                              alt={img}
+                            />
+                            <CardActions>
+                              <Button
+                                fullWidth
+                                color="error"
+                                onClick={() => onDeleteImage(img)}
+                              >
+                                Borrar
+                              </Button>
+                            </CardActions>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                </>
+              ) : null}
+              <Divider sx={{ margin: 2 }} />
+              {
+                <DialogActions>
                   <Button
                     color="inherit"
                     disabled={activeStep === 0}
@@ -624,31 +578,40 @@ const TicketsPage: FC<Props> = ({ ticket }) => {
                   ) : (
                     <Button onClick={handleNext}>Siguiente</Button>
                   )}
-                </Box>
-              </React.Fragment>
-            }
-          </form>
+                </DialogActions>
+              }
+            </form>
+          </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-        </DialogActions>
       </Dialog>
     </AdminLayout>
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-
+export const getServerSideProps: GetServerSideProps = async ({
+  query,
+  req,
+}) => {
   let ticket: ITicket | null;
 
+  const session = await getSession({ req });
+  const userData = await getUserData(session.user.email);
+  const filteredTicket = await getTicketsByLocation(userData.locations);
   const tempTicket = JSON.parse(JSON.stringify(new Ticket()));
   delete tempTicket._id;
 
+  delete userData._id;
+  for (let i = 0; i < filteredTicket.length; i++) {
+    delete filteredTicket[i]._id;
+  }
+  const filteredTicketJSON = JSON.stringify(filteredTicket);
   ticket = tempTicket;
 
   return {
     props: {
       ticket,
+      userData,
+      filteredTicketJSON,
     },
   };
 };

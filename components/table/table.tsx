@@ -13,7 +13,7 @@ import {
   ColumnDef,
   flexRender,
   CellContext,
-
+  ColumnFiltersState,
 } from '@tanstack/react-table';
 
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -31,12 +31,15 @@ interface ReactTableProps<T extends object> {
 
 export const TheTable = <T extends object>({ data, columns,renderSubComponent }: ReactTableProps<T>) => {
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
  const table = useReactTable({
   data,
   columns,
   state: {
     expanded,
-    
+    columnFilters,
   },
   paginateExpandedRows: false,
   initialState: {
@@ -47,6 +50,7 @@ export const TheTable = <T extends object>({ data, columns,renderSubComponent }:
 
 },
   onExpandedChange: setExpanded,
+  onColumnFiltersChange: setColumnFilters,
   //getSubRows: row => row.associatedEquip,
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
