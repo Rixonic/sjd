@@ -4,7 +4,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { AdminLayout } from '../components/layouts'
 import IconButton from '@mui/material/IconButton';
 import { format } from 'date-fns';
-import { IDosimeter  } from '../interfaces';
+import { IDosimeter, ITicket  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
@@ -24,8 +24,15 @@ import {
 
 } from '@tanstack/react-table';
 import { TheTable } from '../components/table';
+import { GetServerSideProps } from 'next';
+import { getSession } from 'next-auth/react';
+import { getTicketsByLocation } from '../database/dbTickets';
+import { getUserData } from '../database/dbUsers';
+import { Ticket } from '../models';
+import { getDosimeterByLocation } from '../database/dbDosimeters';
 
-const EquipmentsPage = () =>  {  
+const EquipmentsPage = ( props ) =>  {  
+  const dosimeters = props.dosimeter
   const onDownloadImage = (image: string) => {
     fetch(image)
         .then((response) => response.blob())
@@ -116,43 +123,10 @@ const EquipmentsPage = () =>  {
   const [data, setData] = useState([]);
   //const { data } = useSWR<IDosimeter[]>('/api/admin/dosimeter'); 
 
-  const [error, setError] = useState(null);
-
   const { user } = useContext(AuthContext);
   const userSector = user?.email.toUpperCase()
   console.log();
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('/api/admin/dosimeters', {
-          params: {
-            service: user.role === 'admin'? null: user.email.toUpperCase(), 
-          },
-        });
-
-        const formattedData = response.data.map(equipment => {
-
-          const parsedEquipment = {
-            ...equipment,
-            perfomance: equipment.perfomance ? format(new Date(equipment.perfomance), 'MM/yyyy') : null,
-            duePerfomance: equipment.duePerfomance ? format(new Date(equipment.duePerfomance), 'MM/yyyy') : null,
-            electricalSecurity: equipment.electricalSecurity ? format(new Date(equipment.electricalSecurity), 'MM/yyyy') : null,
-            dueElectricalSecurity: equipment.dueElectricalSecurity ? format(new Date(equipment.dueElectricalSecurity), 'MM/yyyy') : null,
-          };
-        
-          return parsedEquipment;
-        });
-
-      setData(formattedData); 
-      } catch (err) {
-        setError(err); 
-      }
-    };
-    if (userSector){
-    fetchData();
-  }
-  }, [userSector]);
-
+  
   
   console.log(data[0])
 
@@ -176,7 +150,7 @@ const EquipmentsPage = () =>  {
         icon={ <CategoryOutlined /> }
     >
       <TheTable           
-        data={data} 
+        data={dosimeters} 
         columns={columns} 
         />
 
@@ -202,5 +176,24 @@ function Filter({
 
 
 }
+
+
+export const getServerSideProps: GetServerSideProps = async ({
+  query,
+  req,
+}) => {
+
+  const session = await getSession({ req });
+  const userData = await getUserData(session.user.email);
+  const dosimeter = await getDosimeterByLocation(userData.locations);
+  const dosimeterParse = JSON.stringify(dosimeter)
+  delete userData._id;
+  console.log(dosimeter)
+  return {
+    props: {
+      dosimeter
+    },
+  };
+};
 
 export default EquipmentsPage;

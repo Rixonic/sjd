@@ -19,6 +19,29 @@ export const getDosimeterById = async( id: string ): Promise<IDosimeter | null> 
 
     return JSON.parse( JSON.stringify( dosimeter ) );
 }
+
+export const getDosimeterByLocation = async (locations: string[]): Promise<IDosimeter | null> => {
+    const lowerCaseLocations = locations.map(location => location.toUpperCase());
+    
+    await db.connect();
+    const dosimeter = await Dosimeter.find({
+        service: { $in: lowerCaseLocations }
+    })
+        .lean();
+    await db.disconnect();
+
+    if ( !dosimeter ) {
+        return null;
+    }
+    console.log(dosimeter)
+
+    for (let i = 0; i < dosimeter.length; i++) {
+        delete dosimeter[i]._id;
+      }
+    return JSON.parse( JSON.stringify( dosimeter ) );
+}
+
+
 /*
 interface EquipmentEquip {
     equip: string;

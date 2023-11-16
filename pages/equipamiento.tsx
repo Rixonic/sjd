@@ -52,12 +52,15 @@ import {
 
 } from '@tanstack/react-table';
 import { TheTable } from '../components/table';
+import { GetServerSideProps } from 'next';
+import { getSession } from 'next-auth/react';
+import { getDosimeterByLocation } from '../database/dbDosimeters';
+import { getUserData } from '../database/dbUsers';
 
 const currentDate = new Date();
-console.log(currentDate)
 
-const EquipmentsPage = () =>  {  
-
+const EquipmentsPage = (props) =>  {  
+  const userData = props.userData
   const columns :ColumnDef<IEquipmentService>[]=[
 
       {
@@ -232,7 +235,7 @@ const EquipmentsPage = () =>  {
           return parsedEquipment;
         });
         
-        const filtered = formattedData.filter((equip) => access[userIndex].locations.includes(equip.service)).sort((a, b) => a.ownId - b.ownId);
+        const filtered = formattedData.filter((equip) => userData.locations.includes(equip.service.toLowerCase())).sort((a, b) => a.ownId - b.ownId);
         console.log(filtered)
         setFilteredEquips(filtered);
       setData(formattedData); 
@@ -317,5 +320,24 @@ function Filter({
     />
   )
 }
+
+
+export const getServerSideProps: GetServerSideProps = async ({
+  query,
+  req,
+}) => {
+
+  const session = await getSession({ req });
+  const userData = await getUserData(session.user.email);
+
+  delete userData._id;
+ 
+  return {
+    props: {
+      userData
+    },
+  };
+};
+
 
 export default EquipmentsPage;
