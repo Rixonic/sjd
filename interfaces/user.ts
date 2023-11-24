@@ -6,6 +6,7 @@ export interface IUser {
     password?: string;
     role     : string;
     locations: string[];
+    sede     : string[];
     sector   : string;
 
     createdAt?: string;

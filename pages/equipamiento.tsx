@@ -1,23 +1,10 @@
-import NextLink from 'next/link';
 import React, {useContext, HTMLAttributes, HTMLProps , useState, useEffect} from 'react'
-import { Box, Typography, Stack} from '@mui/material'
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { AdminLayout } from '../components/layouts'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import Button from '@mui/material/Button';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { format } from 'date-fns';
 import { IEquipmentService  } from '../interfaces';
 import axios from 'axios';
 import { UiContext, AuthContext } from '../context';
-
 import {access}  from '../utils/access';
 import { AddOutlined, CategoryOutlined } from '@mui/icons-material';
 
@@ -47,14 +34,10 @@ import {
   getFilteredRowModel,
   getExpandedRowModel,
   ColumnDef,
-  flexRender,
-  CellContext,
-
 } from '@tanstack/react-table';
 import { TheTable } from '../components/table';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
-import { getDosimeterByLocation } from '../database/dbDosimeters';
 import { getUserData } from '../database/dbUsers';
 
 const currentDate = new Date();
@@ -234,9 +217,10 @@ const EquipmentsPage = (props) =>  {
           
           return parsedEquipment;
         });
-        
-        const filtered = formattedData.filter((equip) => userData.locations.includes(equip.service.toLowerCase())).sort((a, b) => a.ownId - b.ownId);
+        console.log(formattedData)
+        const filtered = formattedData.filter((equip) => userData.locations.toLowerCase().includes(equip.service.toLowerCase())).sort((a, b) => a.ownId - b.ownId);
         console.log(filtered)
+        console.log("hola")
         setFilteredEquips(filtered);
       setData(formattedData); 
       } catch (err) {

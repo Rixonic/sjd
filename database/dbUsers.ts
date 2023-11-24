@@ -55,8 +55,8 @@ export const getUserData = async( email: string ) => {
     const user = await User.findOne({ email: email });
     if ( user ) {
         await db.disconnect();
-        const { _id, name, email, role, sector, locations } = user;
-        return { _id, name, email, role, sector, locations };
+        const { _id, name, email, role, sector, locations, sede} = user;
+        return { _id, name, email, role, sector, locations, sede };
     }
 
     await db.disconnect();

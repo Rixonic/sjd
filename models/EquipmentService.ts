@@ -8,6 +8,7 @@ const userSchema = new Schema({
     brand       : { type: String, required: true },
     model       : { type: String, required: true },
     serialNumber: { type: String, required: true },
+    sede        : { type: String, required: true },
     service     : {
         type: String,
         enum: {

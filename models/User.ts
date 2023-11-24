@@ -16,6 +16,7 @@ const userSchema = new Schema({
         }
     },
     locations: [{type: String, default: '' }],
+    sede     : [{type: String, default: '' }],
     sector: {
         type: String,
         enum: {

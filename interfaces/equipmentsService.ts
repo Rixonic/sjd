@@ -8,6 +8,7 @@ export interface IEquipmentService {
     model       : string;
     serialNumber: string;
     service     : string;
+    sede        : string;
     perfomance  : Date;
     duePerfomance: Date;
     electricalSecurity: Date;
