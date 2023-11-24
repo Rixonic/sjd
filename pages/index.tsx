@@ -75,6 +75,7 @@ const EquipmentsPage = () =>  {
           <CardActions sx={{ justifyContent:"space-evenly"}} >
         <Button variant="outlined" href="/dosimetros" color="primary"  size="large">Ir a</Button>
         </CardActions>       
+        <Button target="_blank" rel="noopener noreferrer" variant="outlined" href="https://res.cloudinary.com/dlwkur7zi/image/upload/v1700676181/c8mwt4ehnnjdqryxygdj.pdf" color="primary"  size="large"style={{maxWidth: '140px',  minWidth: '140px',}}>Instructivo</Button>
     </Card>
     <Card sx={{ width: 400  , height:400, boxShadow: 3, display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent:'space-evenly'}}>
       <CardContent 
